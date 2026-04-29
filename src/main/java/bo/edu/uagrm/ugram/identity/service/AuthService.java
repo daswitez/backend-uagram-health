@@ -5,7 +5,10 @@ import bo.edu.uagrm.ugram.common.exception.ResourceNotFoundException;
 import bo.edu.uagrm.ugram.common.security.JwtProvider;
 import bo.edu.uagrm.ugram.identity.dto.*;
 import bo.edu.uagrm.ugram.identity.entity.User;
+import bo.edu.uagrm.ugram.identity.entity.UserType;
+import bo.edu.uagrm.ugram.identity.entity.Patient;
 import bo.edu.uagrm.ugram.identity.repository.UserRepository;
+import bo.edu.uagrm.ugram.identity.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +27,48 @@ public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
+    private final PatientRepository patientRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
 
     @Value("${app.jwt.access-expiration-ms}")
     private long accessExpirationMs;
+
+    /**
+     * Registers a new student (User + Patient profile).
+     */
+    @Transactional
+    public void register(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BusinessException("El correo electrónico ya está registrado");
+        }
+        if (userRepository.existsByRu(request.getRu())) {
+            throw new BusinessException("El Registro Universitario (R.U.) ya está registrado");
+        }
+
+        User user = User.builder()
+                .email(request.getEmail())
+                .ru(request.getRu())
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .phone(request.getPhone())
+                .userType(UserType.STUDENT)
+                .isActive(true)
+                .build();
+
+        user = userRepository.save(user);
+
+        Patient patient = Patient.builder()
+                .user(user)
+                .career(request.getCareer())
+                .bloodType(request.getBloodType())
+                .build();
+
+        patientRepository.save(patient);
+
+        log.info("Student registered successfully: {} (RU: {})", user.getEmail(), user.getRu());
+    }
 
     /**
      * Authenticates a user by email or RU and returns JWT tokens.

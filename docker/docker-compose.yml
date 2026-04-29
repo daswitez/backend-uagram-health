@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-ugram}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql

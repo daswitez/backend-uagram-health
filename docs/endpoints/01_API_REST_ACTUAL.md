@@ -26,13 +26,30 @@ El frontend (React Native o Next.js) siempre recibirá este formato de "envelope
 
 | Método | Endpoint | Rol Requerido | Descripción |
 |---|---|---|---|
+| `POST` | `/auth/register` | *Público* | Registra a un nuevo estudiante. Requiere R.U., email, contraseña, nombre y apellidos. |
 | `POST` | `/auth/login` | *Público* | Inicia sesión usando Email (médicos) o R.U. (estudiantes). Retorna JWT Access (15m) y Refresh (7d). |
 | `POST` | `/auth/refresh` | *Público* | Renueva el Access Token usando un Refresh Token válido. |
 | `GET` | `/profile` | *Autenticado* | Retorna los datos del perfil del usuario actualmente autenticado (calculado desde el token). |
 
 ### Ejemplos cURL (Postman / Frontend)
 
-**1. Login como Estudiante (Usando R.U.)**
+**1. Registro de Estudiante**
+```bash
+curl --location 'http://localhost:8080/api/v1/auth/register' \
+--header 'Content-Type: application/json' \
+--data '{
+    "ru": "220056789",
+    "email": "nuevo.estudiante@est.uagrm.edu.bo",
+    "password": "miPassword123",
+    "firstName": "Ana",
+    "lastName": "Gómez",
+    "phone": "+591 70000005",
+    "career": "Arquitectura",
+    "bloodType": "A+"
+}'
+```
+
+**2. Login como Estudiante (Usando R.U.)**
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/login' \
 --header 'Content-Type: application/json' \

@@ -4,7 +4,7 @@
 
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ugram_health}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/ugram_health}
     username: ${SPRING_DATASOURCE_USERNAME:ugram}
     password: ${SPRING_DATASOURCE_PASSWORD:dev_password}
     hikari:

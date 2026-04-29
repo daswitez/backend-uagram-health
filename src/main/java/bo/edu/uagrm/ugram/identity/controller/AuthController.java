@@ -19,6 +19,17 @@ public class AuthController {
     private final AuthService authService;
 
     /**
+     * POST /api/v1/auth/register
+     * Registers a new student account.
+     */
+    @PostMapping("/auth/register")
+    public ResponseEntity<ApiResponse<Void>> register(
+            @Valid @RequestBody RegisterRequest request) {
+        authService.register(request);
+        return ResponseEntity.ok(ApiResponse.ok("Registro exitoso", null));
+    }
+
+    /**
      * POST /api/v1/auth/login
      * Authenticates user by email or R.U. and returns JWT tokens.
      * US-M01, US-W01
