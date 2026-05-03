@@ -38,17 +38,17 @@ public class AuthService {
      * Registers a new student (User + Patient profile).
      */
     @Transactional
-    public void register(RegisterRequest request) {
+    public void register(PatientRegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BusinessException("El correo electrónico ya está registrado");
         }
-        if (userRepository.existsByRu(request.getRu())) {
-            throw new BusinessException("El Registro Universitario (R.U.) ya está registrado");
+        if (userRepository.existsByCi(request.getCi())) {
+            throw new BusinessException("El Carnet de Identidad (C.I.) ya está registrado");
         }
 
         User user = User.builder()
                 .email(request.getEmail())
-                .ru(request.getRu())
+                .ci(request.getCi())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -67,16 +67,16 @@ public class AuthService {
 
         patientRepository.save(patient);
 
-        log.info("Student registered successfully: {} (RU: {})", user.getEmail(), user.getRu());
+        log.info("Student registered successfully: {} (CI: {})", user.getEmail(), user.getCi());
     }
 
     /**
-     * Authenticates a user by email or RU and returns JWT tokens.
+     * Authenticates a user by email or CI and returns JWT tokens.
      */
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
         User user = userRepository
-                .findByEmailOrRu(request.getIdentifier(), request.getIdentifier())
+                .findByEmailOrCi(request.getIdentifier(), request.getIdentifier())
                 .orElseThrow(() -> new BadCredentialsException("Credenciales inválidas"));
 
         if (!user.getIsActive()) {
@@ -150,7 +150,7 @@ public class AuthService {
         return UserProfileResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
-                .ru(user.getRu())
+                .ci(user.getCi())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .fullName(user.getFullName())

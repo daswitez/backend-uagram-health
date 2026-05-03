@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+  bo.edu.uagrm.ugram.common.config.DotenvEnvironmentPostProcessor

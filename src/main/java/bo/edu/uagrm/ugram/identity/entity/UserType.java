@@ -6,6 +6,7 @@ package bo.edu.uagrm.ugram.identity.entity;
  */
 public enum UserType {
     STUDENT,
+    PATIENT,
     DOCTOR,
     ADMIN,
     LAB_TECH,

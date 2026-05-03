@@ -26,8 +26,9 @@ El frontend (React Native o Next.js) siempre recibirá este formato de "envelope
 
 | Método | Endpoint | Rol Requerido | Descripción |
 |---|---|---|---|
-| `POST` | `/auth/register` | *Público* | Registra a un nuevo estudiante. Requiere R.U., email, contraseña, nombre y apellidos. |
-| `POST` | `/auth/login` | *Público* | Inicia sesión usando Email (médicos) o R.U. (estudiantes). Retorna JWT Access (15m) y Refresh (7d). |
+| `POST` | `/auth/register/patient` | *Público* | Registra a un nuevo paciente/estudiante. Requiere C.I., email, contraseña, nombre y apellidos. |
+| `POST` | `/admin/users/staff` | **ADMIN** | Da de alta a personal médico (Doctores, Laboratoristas). Requiere JWT de Administrador. |
+| `POST` | `/auth/login` | *Público* | Inicia sesión usando Email (médicos) o C.I. (estudiantes). Retorna JWT Access (15m) y Refresh (7d). |
 | `POST` | `/auth/refresh` | *Público* | Renueva el Access Token usando un Refresh Token válido. |
 | `GET` | `/profile` | *Autenticado* | Retorna los datos del perfil del usuario actualmente autenticado (calculado desde el token). |
 
@@ -35,26 +36,43 @@ El frontend (React Native o Next.js) siempre recibirá este formato de "envelope
 
 **1. Registro de Estudiante**
 ```bash
-curl --location 'http://localhost:8080/api/v1/auth/register' \
+curl --location 'http://localhost:8080/api/v1/auth/register/patient' \
 --header 'Content-Type: application/json' \
 --data '{
-    "ru": "220056789",
-    "email": "nuevo.estudiante@est.uagrm.edu.bo",
-    "password": "miPassword123",
-    "firstName": "Ana",
-    "lastName": "Gómez",
-    "phone": "+591 70000005",
-    "career": "Arquitectura",
+    "ci": "7675537",
+    "email": "msd@est.uagrm.edu.bo",
+    "password": "Slv6001313@.",
+    "firstName": "Daniel",
+    "lastName": "Mercado Subirana",
+    "phone": "+591 72151849",
+    "career": "Ing. Sistemas Informáticos",
     "bloodType": "A+"
 }'
 ```
 
-**2. Login como Estudiante (Usando R.U.)**
+**2. Creación de Personal Médico (Solo Admin)**
+```bash
+curl --location 'http://localhost:8080/api/v1/admin/users/staff' \
+--header 'Authorization: Bearer <TU_ADMIN_ACCESS_TOKEN>' \
+--header 'Content-Type: application/json' \
+--data '{
+    "ci": "87654321",
+    "email": "nuevo.doctor@uagrm.edu.bo",
+    "firstName": "Carlos",
+    "lastName": "Vargas",
+    "phone": "+591 70000001",
+    "userType": "DOCTOR",
+    "medicalLicense": "MP-9988",
+    "specialty": "Cardiología"
+}'
+```
+
+**3. Login como Estudiante (Usando C.I.)**
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/login' \
 --header 'Content-Type: application/json' \
 --data '{
-    "identifier": "220012345",
+    "identifier": "12345678",
     "password": "student123"
 }'
 ```

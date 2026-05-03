@@ -62,6 +62,9 @@ Una vez que la base de datos está activa, puedes iniciar el servidor Backend. F
 # En Linux / macOS
 ./gradlew bootRun --args='--spring.profiles.active=dev'
 
+export $(grep -v '^#' .env | xargs) && ./gradlew bootRun --args='--spring.profiles.active=dev'
+
+
 # En Windows (CMD o PowerShell)
 gradlew.bat bootRun --args="--spring.profiles.active=dev"
 ```
@@ -74,12 +77,12 @@ Si todo sale bien, verás en la consola que el servidor inicia en el puerto **80
 
 Para que puedas empezar a probar los endpoints (ej. hacer login) inmediatamente, la base de datos se inicializa con los siguientes usuarios de prueba. **La contraseña para todos los usuarios listados a continuación es la que le corresponde en la tabla** (por defecto configuradas en la migración `V5`).
 
-| Rol | Identificador (Email o R.U.) | Contraseña |
+| Rol | Identificador (Email o C.I.) | Contraseña |
 |---|---|---|
-| **Administrador** | `admin@uagrm.edu.bo` | `admin123` |
-| **Médico** | `dr.martinez@uagrm.edu.bo` | `doctor123` |
-| **Estudiante** | `220012345` | `student123` |
-| **Laboratorista** | `lab.garcia@uagrm.edu.bo` | `lab123` |
+| **Administrador** | `admin@uagrm.edu.bo` | `Test_123!` |
+| **Médico** | `dr.martinez@uagrm.edu.bo` | `Test_123!` |
+| **Estudiante** | `12345678` | `Test_123!` |
+| **Laboratorista** | `lab.garcia@uagrm.edu.bo` | `Test_123!` |
 
 ### Haciendo tu primera petición
 
@@ -89,8 +92,8 @@ Para probar que la app funciona, abre otra terminal y ejecuta este cURL para ini
 curl --location 'http://localhost:8080/api/v1/auth/login' \
 --header 'Content-Type: application/json' \
 --data '{
-    "identifier": "220012345",
-    "password": "student123"
+    "identifier": "12345678",
+    "password": "Test_123!"
 }'
 ```
 El sistema te devolverá tu `accessToken` y `refreshToken`.

@@ -15,7 +15,7 @@ public class UserProfileResponse {
 
     private UUID id;
     private String email;
-    private String ru;
+    private String ci;
     private String firstName;
     private String lastName;
     private String fullName;

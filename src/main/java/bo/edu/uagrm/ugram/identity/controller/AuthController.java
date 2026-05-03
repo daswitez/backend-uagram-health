@@ -19,12 +19,12 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * POST /api/v1/auth/register
+     * POST /api/v1/auth/register/patient
      * Registers a new student account.
      */
-    @PostMapping("/auth/register")
+    @PostMapping("/auth/register/patient")
     public ResponseEntity<ApiResponse<Void>> register(
-            @Valid @RequestBody RegisterRequest request) {
+            @Valid @RequestBody PatientRegisterRequest request) {
         authService.register(request);
         return ResponseEntity.ok(ApiResponse.ok("Registro exitoso", null));
     }

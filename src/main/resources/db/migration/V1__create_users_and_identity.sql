@@ -3,12 +3,12 @@
 -- Module: identity
 -- ═══════════════════════════════════════════════════════════
 
-CREATE TYPE user_type AS ENUM ('STUDENT', 'DOCTOR', 'ADMIN', 'LAB_TECH', 'RECEPTIONIST');
+CREATE TYPE user_type AS ENUM ('STUDENT', 'PATIENT', 'DOCTOR', 'ADMIN', 'LAB_TECH', 'RECEPTIONIST');
 
 CREATE TABLE users (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email           VARCHAR(255) NOT NULL UNIQUE,
-    ru              VARCHAR(50) UNIQUE,
+    ci              VARCHAR(50) UNIQUE,
     password_hash   VARCHAR(255) NOT NULL,
     first_name      VARCHAR(100) NOT NULL,
     last_name       VARCHAR(100) NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE doctors (
 );
 
 CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_ru ON users(ru);
+CREATE INDEX idx_users_ci ON users(ci);
 CREATE INDEX idx_users_type ON users(user_type);
 CREATE INDEX idx_patients_user ON patients(user_id);
 CREATE INDEX idx_doctors_user ON doctors(user_id);

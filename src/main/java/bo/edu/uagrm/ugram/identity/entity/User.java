@@ -31,9 +31,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    /** Registro Universitario — only for students, nullable for staff */
+    /** Carnet de Identidad — nullable for staff */
     @Column(unique = true)
-    private String ru;
+    private String ci;
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;

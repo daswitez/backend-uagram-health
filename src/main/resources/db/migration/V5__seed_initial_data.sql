@@ -4,12 +4,12 @@
 -- ═══════════════════════════════════════════════════════════
 
 -- Default admin user (password: "admin123" hashed with BCrypt strength 12)
-INSERT INTO users (id, email, ru, password_hash, first_name, last_name, phone, user_type, is_active)
+INSERT INTO users (id, email, ci, password_hash, first_name, last_name, phone, user_type, is_active)
 VALUES (
     'a0000000-0000-0000-0000-000000000001',
     'admin@uagrm.edu.bo',
     NULL,
-    '$2a$12$LJ3m4ys4C.cMVD3zFCKhVuy9FnGFH/1GBXAIkFJj3G7KlPxkSL2pu',
+    '$2a$12$rS8iEzXoUO.LsOeP3kfJO.lwRidZmdRSK.G/IdddGRljCBN1.7syG',
     'Administrador',
     'FUSUM',
     '+591 70000001',
@@ -18,12 +18,12 @@ VALUES (
 );
 
 -- Demo doctor (password: "doctor123")
-INSERT INTO users (id, email, ru, password_hash, first_name, last_name, phone, user_type, is_active)
+INSERT INTO users (id, email, ci, password_hash, first_name, last_name, phone, user_type, is_active)
 VALUES (
     'a0000000-0000-0000-0000-000000000002',
     'dr.martinez@uagrm.edu.bo',
     NULL,
-    '$2a$12$LJ3m4ys4C.cMVD3zFCKhVuy9FnGFH/1GBXAIkFJj3G7KlPxkSL2pu',
+    '$2a$12$rS8iEzXoUO.LsOeP3kfJO.lwRidZmdRSK.G/IdddGRljCBN1.7syG',
     'Carlos',
     'Martínez',
     '+591 70000002',
@@ -35,12 +35,12 @@ INSERT INTO doctors (user_id, medical_license, specialty)
 VALUES ('a0000000-0000-0000-0000-000000000002', 'MP-12345', 'Medicina General');
 
 -- Demo student (password: "student123")
-INSERT INTO users (id, email, ru, password_hash, first_name, last_name, phone, user_type, is_active)
+INSERT INTO users (id, email, ci, password_hash, first_name, last_name, phone, user_type, is_active)
 VALUES (
     'a0000000-0000-0000-0000-000000000003',
     'juan.perez@est.uagrm.edu.bo',
-    '220012345',
-    '$2a$12$LJ3m4ys4C.cMVD3zFCKhVuy9FnGFH/1GBXAIkFJj3G7KlPxkSL2pu',
+    '12345678',
+    '$2a$12$rS8iEzXoUO.LsOeP3kfJO.lwRidZmdRSK.G/IdddGRljCBN1.7syG',
     'Juan',
     'Pérez',
     '+591 70000003',
@@ -52,12 +52,12 @@ INSERT INTO patients (user_id, career, blood_type, date_of_birth)
 VALUES ('a0000000-0000-0000-0000-000000000003', 'Ingeniería en Sistemas', 'O+', '2002-05-15');
 
 -- Demo lab tech (password: "lab123")
-INSERT INTO users (id, email, ru, password_hash, first_name, last_name, phone, user_type, is_active)
+INSERT INTO users (id, email, ci, password_hash, first_name, last_name, phone, user_type, is_active)
 VALUES (
     'a0000000-0000-0000-0000-000000000004',
     'lab.garcia@uagrm.edu.bo',
     NULL,
-    '$2a$12$LJ3m4ys4C.cMVD3zFCKhVuy9FnGFH/1GBXAIkFJj3G7KlPxkSL2pu',
+    '$2a$12$rS8iEzXoUO.LsOeP3kfJO.lwRidZmdRSK.G/IdddGRljCBN1.7syG',
     'María',
     'García',
     '+591 70000004',
