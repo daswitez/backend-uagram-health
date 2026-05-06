@@ -20,7 +20,8 @@ Estado verificado del proyecto:
 - `identity` implementado y usable
 - `common` implementado
 - `storage` con servicio MinIO implementado
-- `scheduling`, `emr` y `laboratory` con entidades/migraciones base, pero sin API completa
+- `scheduling` con perfil y disponibilidad semanal del médico ya expuestos, pero sin slots/citas completas
+- `emr` y `laboratory` con entidades/migraciones base, pero sin API completa
 - frontend ya integrado con rutas, roles y vistas por perfil
 
 La seguridad y el diseño funcional deben seguir dos principios obligatorios:
@@ -101,6 +102,10 @@ curl --location 'http://localhost:8080/api/v1/auth/login' \
 - `POST /auth/refresh`
 - `GET /profile`
 - `POST /admin/users/staff`
+- `GET /doctors/me/profile`
+- `PUT /doctors/me/profile`
+- `GET /doctors/me/availability`
+- `PUT /doctors/me/availability`
 
 Los demás endpoints documentados deben tratarse como contrato objetivo hasta que exista controlador real.
 

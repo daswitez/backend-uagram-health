@@ -1,6 +1,6 @@
 # Estado Real del Backend
 
-Fecha de corte: **2026-05-05**
+Fecha de corte: **2026-05-06**
 
 ## 1. Resumen
 
@@ -33,7 +33,7 @@ Esto es intencional en la documentación para no inducir cambios técnicos inseg
 | `common` | implementado |
 | `identity` | implementado |
 | `storage` | parcial |
-| `scheduling` | scaffold |
+| `scheduling` | parcial |
 | `emr` | scaffold |
 | `laboratory` | scaffold |
 | `notification` | planificado |
@@ -47,12 +47,18 @@ Endpoints reales:
 - `POST /auth/refresh`
 - `GET /profile`
 - `POST /admin/users/staff`
+- `GET /doctors/me/profile`
+- `PUT /doctors/me/profile`
+- `GET /doctors/me/availability`
+- `PUT /doctors/me/availability`
 
 Notas:
 
 - login por `email` o `ci`
 - contraseña seed real: `Test_123!`
 - `/profile` devuelve hoy perfil base; no completa todavía todo el DTO extendido
+- el perfil profesional del médico ya puede consultarse y editarse por endpoint dedicado
+- la disponibilidad semanal del médico ya puede consultarse y reemplazarse por endpoint dedicado
 
 ## 5. Lo adelantado en modelo pero no en API
 
@@ -63,14 +69,16 @@ Ya existen:
 - entidad `Appointment`
 - `AppointmentRepository`
 - consultas para conflictos, agenda semanal y próximas notificaciones
+- entidad `DoctorWeeklyAvailability`
+- controlador y servicio para disponibilidad semanal del médico
 
 Falta:
 
-- disponibilidad médica
+- parámetros operativos de agenda
 - feriados
 - bloqueos del médico
 - motor de slots
-- servicios y controladores
+- slots y citas expuestos por API
 
 ### EMR
 
@@ -118,11 +126,10 @@ Eso afecta:
 
 ## 7. Próximo orden lógico
 
-1. perfil profesional del médico
-2. agenda y disponibilidad
-3. feriados y bloqueos
-4. slots y citas
-5. EMR con control contextual
-6. laboratorio y archivos
-7. notificaciones
-8. blockchain real
+1. parámetros operativos de agenda
+2. feriados y bloqueos
+3. slots y citas
+4. EMR con control contextual
+5. laboratorio y archivos
+6. notificaciones
+7. blockchain real
