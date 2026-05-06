@@ -1,110 +1,121 @@
-# Ugram Health - Backend
+# UAGRM Health - Backend
 
-Este es el backend del ecosistema médico **Ugram Health**, construido sobre una arquitectura de **Monolito Modular** utilizando Spring Boot 3.4 y Java 21.
+Backend del ecosistema clínico **UAGRM Health**, construido como **monolito modular** con Spring Boot 3.4 y Java 21.
 
-Toda la documentación arquitectónica profunda, decisiones de diseño, esquema de base de datos y endpoints se encuentran en la carpeta `/docs`.
+## Nota importante sobre nombres
 
----
+El nombre correcto del producto es **UAGRM Health**.
 
-## 🚀 Requisitos Previos
+Sin embargo, el código fuente todavía conserva el typo histórico `ugram` en paquetes, clases, variables y nombres técnicos internos. Eso **no debe cambiarse por ahora** porque rompería la ejecución y las integraciones existentes.
 
-Para correr este proyecto necesitas tener instalado en tu máquina local:
+En consecuencia:
 
-1. **Java Development Kit (JDK) 21**
-2. **Docker y Docker Compose** (para levantar la base de datos PostgreSQL y MinIO).
-3. *(Opcional)* Postman para probar los endpoints.
+- en **documentación funcional y de producto** se usará `UAGRM Health`
+- en **referencias técnicas al código** se respetará el namespace real actual, por ejemplo `bo.edu.uagrm.ugram`
 
-*Nota: No necesitas instalar Gradle, el proyecto incluye un Wrapper (`gradlew`) que lo descargará automáticamente.*
+## Estado actual del backend
 
----
+Estado verificado del proyecto:
 
-## 🛠️ Cómo Correr el Proyecto (Paso a Paso)
+- `identity` implementado y usable
+- `common` implementado
+- `storage` con servicio MinIO implementado
+- `scheduling`, `emr` y `laboratory` con entidades/migraciones base, pero sin API completa
+- frontend ya integrado con rutas, roles y vistas por perfil
 
-### 1. Configurar Variables de Entorno
+La seguridad y el diseño funcional deben seguir dos principios obligatorios:
 
-El proyecto incluye una plantilla de variables de entorno. Copia el archivo de ejemplo para crear el tuyo propio:
+1. **Mínimo privilegio**
+2. **Need to know**
+
+## Requisitos
+
+- JDK 21
+- Docker y Docker Compose
+- Opcional: Postman o Insomnia
+
+No hace falta instalar Gradle; el proyecto incluye `./gradlew`.
+
+## Cómo levantar el entorno
+
+### 1. Variables de entorno
 
 ```bash
-# En la raíz del proyecto
 cp .env.example .env
 ```
-*(Puedes dejar los valores por defecto que trae para desarrollo local).*
 
-### 2. Levantar la Infraestructura (Base de Datos y Almacenamiento)
-
-Utiliza Docker Compose para iniciar PostgreSQL y MinIO en segundo plano. Esto también ejecutará los scripts de inicialización necesarios:
+### 2. Infraestructura
 
 ```bash
-# Si usas Docker Compose V2 (más reciente):
 docker compose -f docker/docker-compose.yml up -d postgres minio minio-init
-
-# Si usas Docker Compose V1 (antiguo):
-docker-compose -f docker/docker-compose.yml up -d postgres minio minio-init
 ```
 
-Para verificar que los contenedores están corriendo correctamente:
-```bash
-docker ps
-```
-Deberías ver a `ugram-postgres` corriendo en el puerto **5433** (lo cambiamos para no chocar con tu Postgres local) y a `ugram-minio` en los puertos 9000/9001.
+Servicios esperados:
 
-### 3. Detener la Infraestructura (Opcional)
-Cuando termines de trabajar y quieras apagar la base de datos sin perder los datos:
-```bash
-docker-compose -f docker/docker-compose.yml down
-```
+- PostgreSQL en `localhost:5433`
+- MinIO API en `localhost:9000`
+- MinIO Console en `localhost:9001`
 
-### 4. Ejecutar la Aplicación Spring Boot
-
-Una vez que la base de datos está activa, puedes iniciar el servidor Backend. Flyway se encargará de crear todas las tablas e insertar los datos de prueba automáticamente al arrancar.
+### 3. Backend
 
 ```bash
-# En Linux / macOS
 ./gradlew bootRun --args='--spring.profiles.active=dev'
-
-export $(grep -v '^#' .env | xargs) && ./gradlew bootRun --args='--spring.profiles.active=dev'
-
-
-# En Windows (CMD o PowerShell)
-gradlew.bat bootRun --args="--spring.profiles.active=dev"
 ```
 
-Si todo sale bien, verás en la consola que el servidor inicia en el puerto **8080**.
+API local:
 
----
+```text
+http://localhost:8080/api/v1
+```
 
-## 🧪 Usuarios de Prueba (Seed Data)
+## Usuarios seed
 
-Para que puedas empezar a probar los endpoints (ej. hacer login) inmediatamente, la base de datos se inicializa con los siguientes usuarios de prueba. **La contraseña para todos los usuarios listados a continuación es la que le corresponde en la tabla** (por defecto configuradas en la migración `V5`).
+La migración `V5__seed_initial_data.sql` crea usuarios de prueba. La contraseña válida para todos es:
 
-| Rol | Identificador (Email o C.I.) | Contraseña |
-|---|---|---|
-| **Administrador** | `admin@uagrm.edu.bo` | `Test_123!` |
-| **Médico** | `dr.martinez@uagrm.edu.bo` | `Test_123!` |
-| **Estudiante** | `12345678` | `Test_123!` |
-| **Laboratorista** | `lab.garcia@uagrm.edu.bo` | `Test_123!` |
+```text
+Test_123!
+```
 
-### Haciendo tu primera petición
+| Rol | Identificador |
+|---|---|
+| `ADMIN` | `admin@uagrm.edu.bo` |
+| `DOCTOR` | `dr.martinez@uagrm.edu.bo` |
+| `STUDENT` | `12345678` |
+| `LAB_TECH` | `lab.garcia@uagrm.edu.bo` |
 
-Para probar que la app funciona, abre otra terminal y ejecuta este cURL para iniciar sesión como Estudiante:
+Ejemplo de login:
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/login' \
 --header 'Content-Type: application/json' \
 --data '{
-    "identifier": "12345678",
-    "password": "Test_123!"
+  "identifier": "12345678",
+  "password": "Test_123!"
 }'
 ```
-El sistema te devolverá tu `accessToken` y `refreshToken`.
 
----
+## Endpoints implementados hoy
 
-## 📁 ¿Dónde encuentro más información?
+- `POST /auth/register/patient`
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `GET /profile`
+- `POST /admin/users/staff`
 
-Dirígete a la carpeta `/docs` para entender a profundidad el proyecto:
+Los demás endpoints documentados deben tratarse como contrato objetivo hasta que exista controlador real.
 
-- `/docs/arquitectura/`: Entiende el stack, el Docker Compose y por qué se estructuran los módulos así.
-- `/docs/endpoints/`: Aquí está la lista completa de rutas de la API y comandos `curl` listos para usar en Postman.
-- `/docs/base_de_datos/`: Diagramas Entidad-Relación y explicación de la inmutabilidad de la Ficha Clínica.
-- `/docs/funcionalidad/`: El backlog priorizado de lo que hay que construir (Roadmap).
+## Orden recomendado de lectura
+
+1. `AGENTS.md`
+2. `docs/estado_actual/01_ESTADO_REAL.md`
+3. `docs/arquitectura/02_IAM_ROLES_PERMISOS.md`
+4. `docs/funcionalidad/BACKLOG_PRIORIZADO.md`
+5. `docs/endpoints/01_API_REST_ACTUAL.md`
+
+## Validación rápida
+
+```bash
+./gradlew test
+```
+
+Hoy ese comando pasa, pero todavía no hay suite real en `src/test`.

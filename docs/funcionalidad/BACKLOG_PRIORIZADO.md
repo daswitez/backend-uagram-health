@@ -1,135 +1,369 @@
-# Ugram Health: Backlog Priorizado y Roadmap de Desarrollo
+# Backlog Priorizado de Desarrollo
 
-Este documento define el estado actual del proyecto, el backlog priorizado con criterios de aceptación (formato BDD para Test-Driven Development) y el roadmap a seguir para alcanzar un sistema completo y adecuado.
+## 1. Objetivo
 
----
+Este backlog está ordenado por:
 
-## 📍 1. Estado Actual: ¿Qué tenemos?
+- valor funcional
+- dependencias reales
+- riesgo de seguridad
 
-Actualmente, hemos completado la **Fase 1 (Cimientos y Arquitectura Base)** del Backend.
+Reglas de priorización:
 
-**Infraestructura y Configuración:**
-- [x] Docker Compose configurado (PostgreSQL 16, MinIO).
-- [x] Spring Boot 3.4 con Java 21 configurado (Gradle).
-- [x] Migraciones de base de datos automatizadas con Flyway (Esquemas completos).
-- [x] Configuración de Seguridad Central (Stateless JWT, CORS, BCrypt).
-- [x] Manejo global de excepciones (`GlobalExceptionHandler`).
+1. IAM, mínimo privilegio y need to know no son opcionales
+2. no se habilita agenda del paciente sin disponibilidad médica confiable
+3. no se habilita EMR sin control contextual
+4. no se publica laboratorio sin pipeline completo de orden, archivo y aprobación
 
-**Módulos de Dominio (Scaffold):**
-- [x] **`common`**: Excepciones, DTOs de respuesta unificada, utilidades criptográficas.
-- [x] **`identity`**: Entidades, Repositorios, Servicios (Login, Refresh, Profile) y Controladores implementados. **(100% Funcional)**.
-- [x] **`scheduling`**: Entidades y Repositorios listos. *(Falta Lógica y Endpoints)*.
-- [x] **`emr`**: Entidades e Interfaz Blockchain listos. *(Falta Lógica y Endpoints)*.
-- [x] **`laboratory`**: Entidades listas. *(Falta Lógica y Endpoints)*.
-- [x] **`storage`**: Servicio de MinIO implementado. *(Faltan Endpoints)*.
+## 2. Estado base ya disponible
 
----
+- auth JWT
+- refresh token
+- registro de estudiantes
+- alta de staff por admin
+- entidades y migraciones de scheduling, EMR y laboratory
+- servicio base de MinIO
 
-## 🛤️ 2. El Camino a Seguir (Roadmap de Ejecución)
+## 3. Backlog priorizado
 
-El enfoque de desarrollo será estrictamente iterativo y orientado a pruebas (TDD). No se construirá el Frontend hasta que el endpoint correspondiente del Backend tenga sus pruebas unitarias y de integración pasando en verde.
+### P1. US-I01 - Perfil profesional editable del médico
 
-1.  **Fase 2: Gestión de Citas (Scheduling)**
-    *   Finalizar el CRUD de citas.
-    *   Desarrollar vistas para el "Kanban Calendar" (Web) y la reserva de turnos (Móvil).
-2.  **Fase 3: EMR (Historia Clínica) y Recetas**
-    *   Implementar el guardado inmutable de fichas médicas.
-    *   Integración con macros/snippets (`/gripe`).
-3.  **Fase 4: Módulo de Laboratorio y Storage**
-    *   Subida de PDFs a MinIO y generación de reportes.
-    *   Aprobación por lotes (Batch Approval).
-4.  **Fase 5: Blockchain y Notificaciones (Finalización)**
-    *   Sustituir `NoOpBlockchainService` por la integración real con Hyperledger.
-    *   Implementar notificaciones Push (Firebase).
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero editar mi perfil profesional y parámetros básicos de atención para que el sistema pueda usar datos reales en agenda y consulta.  
+**Dependencias:** `identity` actual.
 
----
+**Criterios de aceptación**
 
-## 📋 3. Backlog Priorizado (Orientado a Pruebas / TDD)
+1. Dado un médico autenticado, cuando consulta su perfil profesional, entonces ve especialidad, matrícula y datos públicos de atención.
+2. Dado un médico autenticado, cuando actualiza su perfil, entonces el sistema persiste solo campos permitidos para su rol.
+3. Dado un usuario que no es médico, cuando intenta usar estos endpoints, entonces el sistema responde `403`.
 
-Las historias de usuario están priorizadas por dependencia técnica. Cada historia incluye **Criterios de Aceptación (AC)** en formato BDD (*Given/When/Then*) para guiar la creación de tests unitarios antes de codificar la solución.
+### P2. US-S01 - Configuración semanal de disponibilidad médica
 
-### 🟡 PRIORIDAD 1: Módulo Scheduling (Agendamiento)
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero definir mis horarios base por día de la semana para que el sistema pueda generar disponibilidad real.  
+**Dependencias:** `US-I01`.
 
-#### US-S01: Listado de Horarios Disponibles (Slots)
-*Como estudiante, quiero ver los horarios disponibles de los médicos para poder agendar una cita.*
+**Criterios de aceptación**
 
-*   **AC 1: Slots disponibles estándar**
-    *   *Given* un médico con horario de 8:00 a 12:00,
-    *   *When* el estudiante consulta disponibilidad para el día X,
-    *   *Then* el sistema devuelve bloques de 20 minutos que no estén ocupados ni cancelados.
-*   **Enfoque TDD:** Crear test `getAvailableSlots_ReturnsEmptySlotsOnly()`. Mockear base de datos devolviendo 1 cita ocupada y verificar que el bloque de esa cita se excluya del resultado.
+1. Dado un médico autenticado, cuando registra franjas por día, entonces el sistema guarda la configuración semanal sin solapamientos.
+2. Dado una franja inválida, cuando se intenta guardar, entonces el sistema rechaza la operación con error de validación.
+3. Dado un médico con configuración guardada, cuando consulta su disponibilidad, entonces recupera exactamente las franjas vigentes.
 
-#### US-S02: Creación de Citas con Prevención de Conflictos
-*Como estudiante, quiero reservar una cita recibiendo confirmación sin que se solape con otro paciente.*
+### P3. US-S02 - Parámetros de agenda y duración de consulta
 
-*   **AC 1: Prevención de solapamiento (Double-booking)**
-    *   *Given* un médico que ya tiene una cita de 10:00 a 10:20,
-    *   *When* el estudiante B intenta agendar a las 10:00,
-    *   *Then* el sistema rechaza la solicitud lanzando `BusinessException` ("Horario no disponible").
-*   **Enfoque TDD:** Escribir test `createAppointment_WhenConflictExists_ThrowsException()`. Probar validación cruzada en la capa de Servicio.
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero definir duración de consulta y reglas operativas para que los slots se generen con mi ritmo real de atención.  
+**Dependencias:** `US-S01`.
 
-#### US-S03: Kanban de Citas para Médicos
-*Como médico, quiero ver todas mis citas del día o semana para gestionar mi flujo de pacientes.*
+**Criterios de aceptación**
 
-*   **AC 1: Filtro por estado y fecha**
-    *   *Given* un médico autenticado,
-    *   *When* consulta su agenda de la semana actual,
-    *   *Then* recibe todas las citas agrupadas por día y ordenadas cronológicamente, incluyendo datos básicos del paciente.
-*   **Enfoque TDD:** Test de repositorio `findDoctorWeeklyAppointments()` verificando que el filtrado por fechas (BETWEEN) funciona correctamente.
+1. Dado un médico autenticado, cuando configura duración de consulta, entonces el motor de agenda usa ese valor al generar slots.
+2. Dado un valor fuera de rango permitido, cuando se intenta guardar, entonces el sistema rechaza el cambio.
+3. Dado una agenda ya configurada, cuando el médico actualiza la duración, entonces los slots futuros usan la nueva regla.
 
----
+### P4. US-A01 - Calendario institucional de feriados y jornadas parciales
 
-### 🟠 PRIORIDAD 2: Módulo EMR (Historia Clínica)
+**Actor:** `ADMIN`  
+**Descripción:** Como administrador, quiero registrar feriados o jornadas parciales para que el sistema no ofrezca atención donde institucionalmente no corresponde.  
+**Dependencias:** IAM actual.
 
-#### US-E01: Guardado de Ficha Clínica (Inmutable)
-*Como médico, quiero guardar el diagnóstico y plan de tratamiento para que quede en el historial.*
+**Criterios de aceptación**
 
-*   **AC 1: Generación de Hash y Cifrado**
-    *   *Given* un diagnóstico válido de un paciente,
-    *   *When* el médico guarda la ficha,
-    *   *Then* el sistema encripta el texto plano (AES), genera un Hash SHA-256 del original, lo guarda en BD (sin `updated_at`) y llama al `BlockchainService.anchorHash()`.
-*   **Enfoque TDD:** Testear `ClinicalRecordService.saveRecord()`. Verificar con `Mockito.verify()` que `EncryptionUtil.encrypt()` y `BlockchainService.anchorHash()` fueron llamados exactamente 1 vez.
+1. Dado un administrador autenticado, cuando crea un feriado total, entonces ningún slot de ese día queda disponible.
+2. Dado un administrador autenticado, cuando crea una jornada parcial, entonces solo quedan disponibles las horas no bloqueadas.
+3. Dado un usuario sin rol `ADMIN`, cuando intenta modificar feriados, entonces el sistema responde `403`.
 
-#### US-E02: Creación y Recuperación de Snippets (Macros)
-*Como médico, quiero usar atajos (ej. /gripe) para autocompletar planes de tratamiento estándar.*
+### P5. US-S03 - Bloqueos y excepciones puntuales del médico
 
-*   **AC 1: Búsqueda de snippets activos**
-    *   *Given* la base de datos de macros,
-    *   *When* el médico consulta los snippets,
-    *   *Then* el sistema devuelve la lista completa de macros `is_active = true` con su trigger y contenido.
-*   **Enfoque TDD:** Escribir un controlador simple, testear con `MockMvc` que el JSON retornado contiene el formato esperado para el frontend (Next.js).
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero bloquear un día o un rango horario específico para reflejar ausencias, licencias o contingencias.  
+**Dependencias:** `US-S01`, `US-S02`.
 
----
+**Criterios de aceptación**
 
-### 🔴 PRIORIDAD 3: Laboratorio y Archivos (Storage)
+1. Dado un médico autenticado, cuando registra un bloqueo puntual, entonces el rango afectado deja de ofrecerse como disponible.
+2. Dado un bloqueo que coincide con citas futuras, cuando se intenta guardar, entonces el sistema reporta el conflicto.
+3. Dado un bloqueo existente, cuando el médico lo elimina, entonces el rango vuelve a disponibilidad solo si no hay otra restricción activa.
 
-#### US-L01: Subida de Resultados (PDF/DICOM)
-*Como personal de laboratorio, quiero subir un resultado en PDF a la orden de un paciente.*
+### P6. US-S04 - Motor de generación de slots
 
-*   **AC 1: Integración exitosa con MinIO**
-    *   *Given* una orden de laboratorio en estado PENDING y un archivo PDF válido,
-    *   *When* el laboratorista sube el archivo,
-    *   *Then* el archivo se guarda en MinIO, se actualiza la BD con la URL del archivo, y la orden pasa a estado READY.
-*   **Enfoque TDD:** Mockear `MinioClient`. Escribir test comprobando que el estado de la entidad `LabOrder` cambia a `READY` tras la subida del archivo.
+**Actor:** Sistema  
+**Descripción:** Como sistema, quiero calcular slots a partir de agenda base, feriados, bloqueos y citas existentes para ofrecer disponibilidad confiable.  
+**Dependencias:** `US-S01`, `US-S02`, `US-A01`, `US-S03`.
 
-#### US-L02: Aprobación por Lotes (Batch Approval)
-*Como laboratorista, quiero seleccionar múltiples exámenes normales y aprobarlos de un solo clic.*
+**Criterios de aceptación**
 
-*   **AC 1: Aprobación masiva**
-    *   *Given* una lista de IDs de órdenes de laboratorio `[1, 2, 3]`,
-    *   *When* el usuario envía la solicitud de aprobación por lotes,
-    *   *Then* el sistema cambia el estado de todas las órdenes a APPROVED en una sola transacción de base de datos.
-*   **Enfoque TDD:** Escribir test `@Transactional`. Guardar 3 órdenes PENDING, ejecutar el servicio y verificar que en BD las 3 ahora están en APPROVED.
+1. Dado un médico con agenda válida, cuando se consulta un día hábil sin restricciones, entonces el sistema devuelve slots ordenados y no solapados.
+2. Dado un feriado o bloqueo, cuando se consulta ese rango, entonces no se devuelve disponibilidad prohibida.
+3. Dado citas existentes, cuando se genera disponibilidad, entonces se excluyen slots ocupados o incompatibles.
 
----
+### P7. US-S05 - Consulta de disponibilidad para el estudiante
 
-### 🔵 PRIORIDAD 4: Notificaciones y Background Jobs
+**Actor:** `STUDENT`  
+**Descripción:** Como estudiante, quiero buscar horarios disponibles por médico o especialidad para reservar una cita que se ajuste a mi horario.  
+**Dependencias:** `US-S04`.
 
-#### US-N01: Recordatorio de Citas (Cron Job)
-*Como sistema, quiero enviar notificaciones 1 hora antes de la cita para reducir el ausentismo.*
+**Criterios de aceptación**
 
-*   **AC 1: Disparo de notificaciones a tiempo**
-    *   *Given* una cita agendada para las 10:00 AM,
-    *   *When* el reloj del servidor marca las 09:00 AM y corre el Cron Job programado,
-    *   *Then* se envía un evento de notificación push al dispositivo del estudiante.
-*   **Enfoque TDD:** Testear la query del repositorio `findUpcomingForNotification()`. Verificar que selecciona correctamente citas que están a exactamente 1 hora en el futuro, descartando las canceladas.
+1. Dado un estudiante autenticado, cuando consulta disponibilidad, entonces solo ve slots realmente reservables.
+2. Dado un día sin disponibilidad, cuando se consulta, entonces el sistema responde lista vacía sin slots fantasma.
+3. Dado un contexto inválido o ajeno, cuando se intenta forzar acceso, entonces el sistema conserva el contexto propio del usuario autenticado.
+
+### P8. US-S06 - Reserva de cita por estudiante
+
+**Actor:** `STUDENT`  
+**Descripción:** Como estudiante, quiero reservar un slot disponible y recibir confirmación inmediata sin riesgo de doble reserva.  
+**Dependencias:** `US-S05`.
+
+**Criterios de aceptación**
+
+1. Dado un slot disponible, cuando el estudiante reserva, entonces el sistema crea la cita con estado inicial válido.
+2. Dado dos solicitudes simultáneas sobre el mismo slot, cuando compiten, entonces solo una se confirma.
+3. Dado un slot ya inválido por bloqueo, cita o feriado, cuando se intenta reservar, entonces el sistema responde que el horario no está disponible.
+
+### P9. US-S07 - Cancelación de cita por estudiante
+
+**Actor:** `STUDENT`  
+**Descripción:** Como estudiante, quiero cancelar una cita propia bajo reglas de negocio para liberar el cupo a tiempo.  
+**Dependencias:** `US-S06`.
+
+**Criterios de aceptación**
+
+1. Dado una cita propia dentro del margen permitido, cuando el estudiante cancela, entonces la cita cambia al estado de cancelación correspondiente.
+2. Dado una cita de otro paciente, cuando se intenta cancelar, entonces el sistema responde `403` o `404` según política definida.
+3. Dado una cita fuera del margen permitido, cuando se intenta cancelar, entonces el sistema rechaza la operación con mensaje de negocio claro.
+
+### P10. US-S08 - Agenda semanal y operación diaria del médico
+
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero ver mi agenda semanal y los estados operativos de las citas para gestionar el flujo diario.  
+**Dependencias:** `US-S06`.
+
+**Criterios de aceptación**
+
+1. Dado un médico autenticado, cuando consulta su semana, entonces recibe sus citas ordenadas cronológicamente con datos mínimos del paciente.
+2. Dado un médico autenticado, cuando cambia el estado operativo de una cita, entonces la transición queda persistida y validada.
+3. Dado un médico, cuando intenta ver agenda de otro profesional, entonces el sistema rechaza el acceso.
+
+### P11. US-S09 - Reprogramación de cita por médico
+
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero reprogramar una cita dentro de mi agenda para gestionar cambios operativos sin romper reglas de disponibilidad.  
+**Dependencias:** `US-S08`, `US-S04`.
+
+**Criterios de aceptación**
+
+1. Dado una cita existente, cuando el médico la mueve a un slot válido, entonces la nueva hora queda confirmada.
+2. Dado un destino que cae en bloqueo, feriado o conflicto, cuando intenta reprogramar, entonces el sistema rechaza la acción.
+3. Dado un médico distinto al dueño de la cita, cuando intenta reprogramarla, entonces el sistema no le permite operar sobre ella.
+
+### P12. US-E01 - Regla de acceso clínico por contexto asistencial
+
+**Actor:** Sistema  
+**Descripción:** Como sistema, quiero limitar el acceso al historial clínico según relación asistencial válida para cumplir need to know.  
+**Dependencias:** `US-S08`.
+
+**Criterios de aceptación**
+
+1. Dado un médico con relación asistencial válida, cuando consulta el EMR, entonces accede al contexto permitido.
+2. Dado un médico sin vínculo asistencial válido, cuando intenta abrir un EMR ajeno, entonces el sistema niega el acceso.
+3. Dado un administrador o laboratorista, cuando intenta acceder a EMR completo, entonces el sistema responde `403`.
+
+### P13. US-E02 - Creación de ficha clínica inmutable
+
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero guardar una ficha clínica que no pueda modificarse después para preservar trazabilidad y validez.  
+**Dependencias:** `US-E01`.
+
+**Criterios de aceptación**
+
+1. Dado una consulta válida, cuando el médico guarda la ficha, entonces el sistema almacena el contenido cifrado y genera su hash.
+2. Dado una ficha ya creada, cuando alguien intenta editarla como registro principal, entonces el sistema no lo permite.
+3. Dado una nueva ficha, cuando se guarda, entonces se invoca `BlockchainService` con la estrategia vigente.
+
+### P14. US-E03 - Notas de corrección append-only
+
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero anexar correcciones a una ficha existente sin alterar el registro original.  
+**Dependencias:** `US-E02`.
+
+**Criterios de aceptación**
+
+1. Dado una ficha clínica existente, cuando el médico registra una corrección, entonces se crea una nota separada vinculada al registro original.
+2. Dado una corrección registrada, cuando se consulta el historial, entonces se visualiza junto con la ficha original manteniendo orden temporal.
+3. Dado un intento de reemplazar el contenido original mediante update directo, entonces el sistema debe impedirlo.
+
+### P15. US-E04 - Drafts y autoguardado clínico
+
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero que la consulta actual se autoguarde como borrador para no perder trabajo ante cierres accidentales.  
+**Dependencias:** `US-E01`.
+
+**Criterios de aceptación**
+
+1. Dado una consulta en edición, cuando ocurre autoguardado, entonces el borrador queda asociado al médico y al paciente correctos.
+2. Dado un médico distinto, cuando intenta leer un draft ajeno, entonces el sistema no lo permite.
+3. Dado una ficha finalizada, cuando se consolida el registro definitivo, entonces el borrador deja de presentarse como activo.
+
+### P16. US-E05 - Snippets clínicos
+
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero consultar snippets activos para acelerar redacción clínica estandarizada.  
+**Dependencias:** base EMR.
+
+**Criterios de aceptación**
+
+1. Dado snippets activos, cuando el médico consulta la lista, entonces solo recibe macros vigentes.
+2. Dado un snippet inactivo, cuando se consulta, entonces no aparece para uso clínico.
+3. Dado un usuario que no es médico, cuando intenta acceder, entonces el sistema rechaza el acceso.
+
+### P17. US-E06 - Emisión de recetas y consulta de recetas activas
+
+**Actor:** `DOCTOR` y `STUDENT`  
+**Descripción:** Como médico, quiero emitir recetas desde la consulta; como estudiante, quiero ver mis recetas activas.  
+**Dependencias:** `US-E02`.
+
+**Criterios de aceptación**
+
+1. Dado una consulta clínica válida, cuando el médico emite una receta, entonces queda asociada al paciente y al contexto clínico.
+2. Dado un estudiante autenticado, cuando consulta recetas activas, entonces solo ve las suyas.
+3. Dado una receta vencida o desactivada, cuando el estudiante consulta, entonces no aparece como activa.
+
+### P18. US-L01 - Catálogo administrable de laboratorio
+
+**Actor:** `ADMIN`  
+**Descripción:** Como administrador, quiero gestionar el catálogo de estudios para que los médicos soliciten pruebas válidas y consistentes.  
+**Dependencias:** IAM actual.
+
+**Criterios de aceptación**
+
+1. Dado un administrador autenticado, cuando crea o actualiza un examen, entonces el catálogo queda disponible para órdenes futuras.
+2. Dado un usuario sin rol `ADMIN`, cuando intenta modificar catálogo, entonces el sistema responde `403`.
+3. Dado un examen inactivo, cuando un médico prepara una nueva orden, entonces no puede seleccionarlo.
+
+### P19. US-L02 - Creación de órdenes de laboratorio desde consulta
+
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero emitir órdenes de laboratorio desde la atención clínica para derivar estudios necesarios sin duplicar trabajo.  
+**Dependencias:** `US-E02`, `US-L01`.
+
+**Criterios de aceptación**
+
+1. Dado una consulta válida, cuando el médico crea una orden, entonces el sistema registra cabecera, prioridad e items seleccionados.
+2. Dado un catálogo inexistente o inactivo, cuando se intenta usar, entonces la orden se rechaza.
+3. Dado un médico sin contexto clínico válido con el paciente, cuando intenta ordenar estudios, entonces el sistema niega la acción.
+
+### P20. US-L03 - Worklist operativa para laboratorio
+
+**Actor:** `LAB_TECH`  
+**Descripción:** Como laboratorista, quiero ver una lista priorizada de órdenes pendientes para operar por urgencia y estado.  
+**Dependencias:** `US-L02`.
+
+**Criterios de aceptación**
+
+1. Dado órdenes pendientes, cuando el laboratorista consulta la worklist, entonces la lista prioriza urgentes y muestra solo el contexto necesario.
+2. Dado una orden ya cerrada, cuando se consulta la bandeja principal, entonces no aparece como pendiente.
+3. Dado un administrador o estudiante, cuando intenta usar esta bandeja, entonces el sistema rechaza el acceso.
+
+### P21. US-L04 - Carga de archivos y resultados a storage
+
+**Actor:** `LAB_TECH`  
+**Descripción:** Como laboratorista, quiero subir resultados PDF o DICOM y asociarlos a una orden para completar el procesamiento técnico.  
+**Dependencias:** `US-L03`.
+
+**Criterios de aceptación**
+
+1. Dado un archivo válido y una orden existente, cuando se sube el resultado, entonces el archivo se almacena en MinIO y queda vinculado al item correspondiente.
+2. Dado un archivo inválido, cuando se intenta subir, entonces el sistema rechaza la operación con mensaje claro.
+3. Dado una orden inexistente o no autorizada, cuando se intenta adjuntar archivo, entonces la operación falla sin exponer datos extra.
+
+### P22. US-L05 - Aprobación por lotes y publicación
+
+**Actor:** `LAB_TECH`  
+**Descripción:** Como laboratorista, quiero aprobar múltiples órdenes normales de una sola vez para acelerar la liberación de resultados.  
+**Dependencias:** `US-L04`.
+
+**Criterios de aceptación**
+
+1. Dado varias órdenes elegibles, cuando el laboratorista ejecuta aprobación por lote, entonces todas cambian de estado en una misma operación transaccional.
+2. Dado una orden no elegible dentro del lote, cuando se procesa, entonces el sistema conserva consistencia y reporta el problema.
+3. Dado órdenes aprobadas, cuando el paciente o médico consultan resultados, entonces solo ven material ya publicado.
+
+### P23. US-L06 - Descarga de resultados por médico y estudiante
+
+**Actor:** `DOCTOR` y `STUDENT`  
+**Descripción:** Como médico o estudiante autorizado, quiero descargar el resultado final publicado para consulta y seguimiento.  
+**Dependencias:** `US-L05`.
+
+**Criterios de aceptación**
+
+1. Dado un resultado publicado, cuando el estudiante propietario lo consulta, entonces puede acceder solo a sus propios resultados.
+2. Dado un médico con contexto clínico válido, cuando consulta resultados de su paciente, entonces puede descargarlos.
+3. Dado un resultado aún no publicado, cuando se intenta acceder, entonces el sistema no lo expone.
+
+### P24. US-N01 - Recordatorios de citas
+
+**Actor:** Sistema  
+**Descripción:** Como sistema, quiero emitir recordatorios de cita para reducir ausentismo.  
+**Dependencias:** `US-S06`, infraestructura de notificación.
+
+**Criterios de aceptación**
+
+1. Dado una cita programada, cuando entra en la ventana de recordatorio, entonces se emite el evento correspondiente.
+2. Dado una cita cancelada, cuando llega la ventana, entonces no se envía recordatorio.
+3. Dado una falla de entrega, cuando ocurre, entonces queda trazabilidad para reintento o monitoreo.
+
+### P25. US-B01 - Anclaje blockchain real
+
+**Actor:** Sistema  
+**Descripción:** Como sistema, quiero reemplazar `NoOpBlockchainService` por una integración real para reforzar trazabilidad e inmutabilidad verificable.  
+**Dependencias:** `US-E02`, infraestructura blockchain.
+
+**Criterios de aceptación**
+
+1. Dado una ficha clínica confirmada, cuando se guarda, entonces el hash se ancla en la red real y retorna identificador verificable.
+2. Dado una verificación posterior, cuando se consulta el hash, entonces el sistema puede validar consistencia entre base de datos y blockchain.
+3. Dado una caída del servicio blockchain, cuando se produce, entonces la aplicación maneja el error según política definida sin perder trazabilidad.
+
+## 4. Orden sugerido por iteraciones
+
+### Iteración 1
+
+- `US-I01`
+- `US-S01`
+- `US-S02`
+- `US-A01`
+- `US-S03`
+- `US-S04`
+
+### Iteración 2
+
+- `US-S05`
+- `US-S06`
+- `US-S07`
+- `US-S08`
+- `US-S09`
+
+### Iteración 3
+
+- `US-E01`
+- `US-E02`
+- `US-E03`
+- `US-E04`
+- `US-E05`
+- `US-E06`
+
+### Iteración 4
+
+- `US-L01`
+- `US-L02`
+- `US-L03`
+- `US-L04`
+- `US-L05`
+- `US-L06`
+
+### Iteración 5
+
+- `US-N01`
+- `US-B01`

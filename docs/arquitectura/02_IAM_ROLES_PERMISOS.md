@@ -1,76 +1,127 @@
-# Identity and Access Management (IAM) - Ugram Health
+# IAM, Roles y Permisos
 
-Este documento define la estrategia de control de acceso para el ecosistema clínico Ugram Health, basada en los estándares de seguridad médica, implementando dos principios fundamentales de ciberseguridad:
+## 1. Objetivo
 
-1. **Principio del Mínimo Privilegio (PoLP):** Cada usuario tiene únicamente los permisos estrictamente necesarios para realizar su trabajo.
-2. **Principio de "Need to Know" (Necesidad de Saber):** El acceso a la información clínica sensible (Fichas Médicas) está restringido criptográficamente y a nivel de aplicación; un médico solo puede ver los datos de los pacientes que está tratando activamente.
+**UAGRM Health** maneja información clínica sensible. El modelo IAM no se limita a autenticación; define también **qué puede hacer cada rol, qué puede ver y bajo qué contexto**.
 
----
+El sistema debe sostener dos principios no negociables:
 
-## 1. Definición de Roles (RBAC - Role Based Access Control)
+1. **Mínimo privilegio**
+2. **Need to know**
 
-El sistema soporta los siguientes roles, escalables a medida que la clínica crece:
+## 2. Principios rectores
 
-### 🟢 Pacientes (Pacientes / Estudiantes)
-- **Rol en BD:** `STUDENT` (o `PATIENT`)
-- **Descripción:** Usuario final del sistema.
-- **Permisos:** 
-  - Solo pueden leer su **propio** historial clínico y resultados de laboratorio.
-  - Pueden agendar citas para sí mismos.
-- **Restricción:** No pueden ver información de absolutamente ningún otro usuario en el sistema.
+### 2.1 Mínimo privilegio
 
-### 🔵 Personal Médico (Doctores / Especialistas)
-- **Rol en BD:** `DOCTOR`
-- **Descripción:** Profesionales de la salud encargados de la atención clínica.
-- **Permisos:**
-  - Leer/Escribir en la Ficha Clínica Electrónica (EMR) de los pacientes que tienen cita con ellos.
-  - Emitir recetas (Prescriptions) y órdenes de laboratorio.
-- **Restricción (Need to Know):** No deberían poder explorar libremente las fichas de pacientes que no están bajo su cuidado. No pueden crear cuentas de otros médicos.
+Cada usuario recibe solo los permisos estrictamente necesarios para operar.
 
-### 🟡 Personal de Laboratorio (Laboratoristas)
-- **Rol en BD:** `LAB_TECH`
-- **Descripción:** Especialistas clínicos técnicos.
-- **Permisos:**
-  - Ver órdenes de laboratorio pendientes.
-  - Subir resultados (Archivos PDF a MinIO) y cerrar órdenes.
-- **Restricción:** No pueden emitir recetas, no pueden modificar la ficha clínica principal, no ven diagnósticos confidenciales que no estén relacionados con la orden de laboratorio.
+Consecuencias prácticas:
 
-### 🔴 Administradores (IT / Recursos Humanos)
-- **Rol en BD:** `ADMIN`
-- **Descripción:** Gestores del sistema y del personal.
-- **Permisos:**
-  - Dar de alta o dar de baja al personal médico, secretarios y laboratoristas.
-  - Gestionar el catálogo de servicios (ej. tipos de exámenes de laboratorio).
-- **Restricción Crítica:** **Un administrador NO tiene acceso a leer las Fichas Clínicas de los pacientes**. El administrador gestiona el sistema, no hace medicina.
+- un `ADMIN` no lee fichas clínicas
+- un `LAB_TECH` no prescribe ni edita EMR
+- un `STUDENT` no accede a datos ajenos
 
-### ⚪ Futuros Roles Planificados
-- **`SECRETARY` (Administrativos / Triage):** Podrán gestionar agendas, confirmar citas y facturar, pero tendrán la Ficha Clínica ofuscada (no pueden ver diagnósticos).
-- **`AUDITOR` (Auditoría Médica / Legal):** Acceso de solo lectura a los registros inmutables (Blockchain) para revisar trazabilidad de cambios en caso de negligencia médica, sin poder modificar nada.
+### 2.2 Need to know
 
----
+No basta con tener un rol válido. También debe existir una **relación asistencial u operativa legítima**.
 
-## 2. Flujos de Creación de Usuarios (Provisioning)
+Ejemplos:
 
-Para respetar el "Principio del Mínimo Privilegio", la creación de cuentas está estrictamente separada en dos flujos:
+- un médico no debe explorar historiales fuera de su contexto asistencial
+- un laboratorista no debe ver diagnóstico completo si solo necesita procesar una orden
+- un estudiante no debe inferir agendas o datos de terceros
 
-### Flujo A: Auto-Registro Público (Solo Pacientes)
-- **Endpoint:** `POST /api/v1/auth/register/patient`
-- **Autorización:** Público (Sin token).
-- **Proceso:**
-  1. El usuario descarga la App Móvil.
-  2. Ingresa su C.I., Email, Nombre, Contraseña y datos básicos (Tipo de Sangre, etc).
-  3. El sistema valida que el C.I. y Email no existan.
-  4. Crea un registro en la tabla `users` forzando el rol `STUDENT`.
-  5. Crea el perfil médico vacío en la tabla `patients`.
-- **Seguridad:** Es imposible que alguien se auto-registre pasando un parámetro oculto `"rol": "ADMIN"` o `"DOCTOR"`. El endpoint tiene el rol *hardcodeado*.
+## 3. Capas de enforcement
 
-### Flujo B: Aprovisionamiento Backoffice (Solo Staff)
-- **Endpoint:** `POST /api/v1/admin/users/staff`
-- **Autorización:** Protegido (Requiere token JWT con rol `ADMIN`).
-- **Proceso:**
-  1. El Administrador verifica las credenciales físicas del nuevo empleado (C.I., Título, Matrícula Profesional).
-  2. El Administrador ingresa al portal web (dashboard).
-  3. Rellena un formulario enviando los datos, el rol a asignar (`DOCTOR` o `LAB_TECH`) y la información específica (ej. Especialidad y Matrícula para el médico).
-  4. El sistema crea el `User` y su respectiva extensión (`doctors` o `lab_techs`).
-  5. El sistema envía un correo al empleado con una contraseña temporal para su primer inicio de sesión.
-- **Seguridad:** Previene la suplantación de identidad médica. Centraliza el control de altas y bajas laborales.
+### 3.1 Backend
+
+- validación de JWT
+- controles por rol
+- filtros por propietario o contexto clínico
+- DTOs limitados por caso de uso
+
+### 3.2 Frontend
+
+El frontend ya cuenta con rutas y vistas separadas por rol, lo cual mejora UX y reduce exposición accidental.
+
+Pero:
+
+- el frontend **no reemplaza** la autorización backend
+- ocultar botones no es una medida de seguridad suficiente
+
+## 4. Roles actuales
+
+| Rol | Alcance principal | Restricción crítica |
+|---|---|---|
+| `ADMIN` | aprovisionamiento de personal, catálogos, calendario institucional | no accede a EMR |
+| `DOCTOR` | agenda, EMR, recetas, órdenes | solo pacientes bajo contexto asistencial válido |
+| `LAB_TECH` | worklist de laboratorio, carga y aprobación de resultados | acceso limitado al contexto de la orden |
+| `STUDENT` | autoservicio sobre datos propios | no accede a datos de terceros |
+| `RECEPTIONIST` | planificado | agenda y operación sin acceso diagnóstico |
+
+## 5. Matriz resumida de permisos
+
+| Capacidad | ADMIN | DOCTOR | LAB_TECH | STUDENT |
+|---|---|---|---|---|
+| Login y refresh | Sí | Sí | Sí | Sí |
+| Ver propio perfil | Sí | Sí | Sí | Sí |
+| Alta de staff | Sí | No | No | No |
+| Configurar agenda médica | No | Sí | No | No |
+| Reservar cita propia | No | No | No | Sí |
+| Ver agenda médica propia | No | Sí | No | No |
+| Crear ficha clínica | No | Sí | No | No |
+| Ver EMR completo | No | Sí, con contexto | No | No |
+| Crear orden de laboratorio | No | Sí | No | No |
+| Procesar resultados | No | No | Sí | No |
+| Descargar resultado propio | No | No | No | Sí |
+
+## 6. Reglas por dominio
+
+### 6.1 Identity
+
+- el auto-registro público solo crea `STUDENT`
+- el alta de staff requiere `ADMIN`
+- no permitir elevación de privilegios desde payloads públicos
+
+### 6.2 Scheduling
+
+- el médico administra su disponibilidad
+- el estudiante solo reserva dentro de slots válidos
+- un horario bloqueado, feriado o excepción no debe exponerse como disponible
+
+### 6.3 EMR
+
+- el médico solo accede al historial de pacientes con vínculo asistencial válido
+- las correcciones son append-only
+- el administrador queda excluido del contenido clínico
+
+### 6.4 Laboratory
+
+- el laboratorista ve órdenes e información mínima para procesarlas
+- el acceso a archivos y resultados debe estar ligado a la orden y al rol
+- el estudiante solo descarga sus propios resultados publicados
+
+## 7. Aprovisionamiento
+
+### 7.1 Auto-registro público
+
+- endpoint: `POST /api/v1/auth/register/patient`
+- resultado: crea `User` + `Patient`
+- rol forzado: `STUDENT`
+
+### 7.2 Alta de personal por administración
+
+- endpoint: `POST /api/v1/admin/users/staff`
+- autorización: `ADMIN`
+- crea usuario de staff y perfil complementario cuando aplica
+
+## 8. Regla para historias futuras
+
+Toda historia nueva debe responder explícitamente:
+
+1. qué rol la ejecuta
+2. qué datos necesita realmente ver
+3. qué datos debe quedar imposibilitado de ver
+4. qué validación de contexto aplica
+
+Si una historia no resuelve esas preguntas, no está lista para implementarse.

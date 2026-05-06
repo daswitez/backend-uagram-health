@@ -1,239 +1,147 @@
-# API REST y Endpoints del Sistema
+# API REST Actual y Contratos Objetivo
 
-Este documento lista los endpoints REST expuestos por el sistema, sus funciones, los roles requeridos para acceder a ellos, y **ejemplos en cURL listos para importar a Postman** o probar en terminal.
+## 1. Alcance
 
-> **Base URL:** `http://localhost:8080/api/v1`
+Este documento separa explícitamente:
 
-Todos los endpoints (excepto `/auth/login` y archivos estáticos) requieren enviar un header de autorización:
-`Authorization: Bearer <access_token>`
+- lo que **ya existe** en backend
+- lo que está **definido como contrato objetivo**
 
-## Formato de Respuesta Universal
+Base URL local:
 
-El frontend (React Native o Next.js) siempre recibirá este formato de "envelope":
+```text
+http://localhost:8080/api/v1
+```
+
+## 2. Formato de respuesta
+
+Todos los endpoints deben responder con el envelope:
 
 ```json
 {
-  "success": true, 
+  "success": true,
   "message": "OK",
-  "data": { ... },
-  "timestamp": "2026-04-28T22:00:00Z"
+  "data": {},
+  "timestamp": "2026-05-05T12:00:00Z"
 }
 ```
 
----
+## 3. Endpoints implementados
 
-## 1. Módulo: Identity (Autenticación y Usuarios)
+### 3.1 Identity
 
-| Método | Endpoint | Rol Requerido | Descripción |
-|---|---|---|---|
-| `POST` | `/auth/register/patient` | *Público* | Registra a un nuevo paciente/estudiante. Requiere C.I., email, contraseña, nombre y apellidos. |
-| `POST` | `/admin/users/staff` | **ADMIN** | Da de alta a personal médico (Doctores, Laboratoristas). Requiere JWT de Administrador. |
-| `POST` | `/auth/login` | *Público* | Inicia sesión usando Email (médicos) o C.I. (estudiantes). Retorna JWT Access (15m) y Refresh (7d). |
-| `POST` | `/auth/refresh` | *Público* | Renueva el Access Token usando un Refresh Token válido. |
-| `GET` | `/profile` | *Autenticado* | Retorna los datos del perfil del usuario actualmente autenticado (calculado desde el token). |
+| Método | Endpoint | Estado | Rol | Notas |
+|---|---|---|---|---|
+| `POST` | `/auth/register/patient` | implementado | público | crea `STUDENT` |
+| `POST` | `/auth/login` | implementado | público | login por `email` o `ci` |
+| `POST` | `/auth/refresh` | implementado | público | refresh de tokens |
+| `GET` | `/profile` | implementado | autenticado | perfil base del usuario autenticado |
+| `POST` | `/admin/users/staff` | implementado | `ADMIN` | alta de staff |
 
-### Ejemplos cURL (Postman / Frontend)
+### 3.2 Ejemplos válidos hoy
 
-**1. Registro de Estudiante**
-```bash
-curl --location 'http://localhost:8080/api/v1/auth/register/patient' \
---header 'Content-Type: application/json' \
---data '{
-    "ci": "7675537",
-    "email": "msd@est.uagrm.edu.bo",
-    "password": "Slv6001313@.",
-    "firstName": "Daniel",
-    "lastName": "Mercado Subirana",
-    "phone": "+591 72151849",
-    "career": "Ing. Sistemas Informáticos",
-    "bloodType": "A+"
-}'
-```
+#### Login de estudiante
 
-**2. Creación de Personal Médico (Solo Admin)**
-```bash
-curl --location 'http://localhost:8080/api/v1/admin/users/staff' \
---header 'Authorization: Bearer <TU_ADMIN_ACCESS_TOKEN>' \
---header 'Content-Type: application/json' \
---data '{
-    "ci": "87654321",
-    "email": "nuevo.doctor@uagrm.edu.bo",
-    "firstName": "Carlos",
-    "lastName": "Vargas",
-    "phone": "+591 70000001",
-    "userType": "DOCTOR",
-    "medicalLicense": "MP-9988",
-    "specialty": "Cardiología"
-}'
-```
-
-**3. Login como Estudiante (Usando C.I.)**
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/login' \
 --header 'Content-Type: application/json' \
 --data '{
-    "identifier": "12345678",
-    "password": "student123"
+  "identifier": "12345678",
+  "password": "Test_123!"
 }'
 ```
 
-**2. Login como Médico / Admin (Usando Email)**
+#### Login de médico
+
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/login' \
 --header 'Content-Type: application/json' \
 --data '{
-    "identifier": "dr.martinez@uagrm.edu.bo",
-    "password": "doctor123"
+  "identifier": "dr.martinez@uagrm.edu.bo",
+  "password": "Test_123!"
 }'
 ```
 
-**3. Obtener Perfil de Usuario**
+#### Obtener perfil
+
 ```bash
 curl --location 'http://localhost:8080/api/v1/profile' \
---header 'Authorization: Bearer AQUI_TU_ACCESS_TOKEN'
+--header 'Authorization: Bearer TU_ACCESS_TOKEN'
 ```
 
-**4. Renovar Token (Refresh)**
+#### Alta de staff
+
 ```bash
-curl --location 'http://localhost:8080/api/v1/auth/refresh' \
+curl --location 'http://localhost:8080/api/v1/admin/users/staff' \
+--header 'Authorization: Bearer TU_ADMIN_ACCESS_TOKEN' \
 --header 'Content-Type: application/json' \
 --data '{
-    "refreshToken": "AQUI_TU_REFRESH_TOKEN"
+  "ci": "87654321",
+  "email": "nuevo.doctor@uagrm.edu.bo",
+  "firstName": "Carlos",
+  "lastName": "Vargas",
+  "phone": "+59170000001",
+  "userType": "DOCTOR",
+  "medicalLicense": "MP-9988",
+  "specialty": "Cardiología"
 }'
 ```
 
----
+## 4. Contratos objetivo priorizados
 
-## 2. Módulo: Scheduling (Agendamiento) - *[En Desarrollo]*
+Estos endpoints todavía no deben asumirse como implementados. Sirven como contrato de trabajo entre backend y frontend.
 
-| Método | Endpoint | Rol Requerido | Descripción |
+### 4.1 Scheduling
+
+Dependencias previas:
+
+- perfil médico editable
+- horarios de atención por médico
+- feriados institucionales
+- bloqueos o excepciones del médico
+- motor de slots
+
+| Método | Endpoint | Rol | Objetivo |
 |---|---|---|---|
-| `GET` | `/appointments/slots` | `STUDENT` | Devuelve los bloques de tiempo libres para un médico/especialidad. |
-| `POST` | `/appointments` | `STUDENT` | El estudiante crea (reserva) una nueva cita. Valida que no haya conflicto. |
-| `DELETE` | `/appointments/{id}`| `STUDENT` | El estudiante cancela su propia cita (requiere antelación mínima). |
-| `GET` | `/appointments/week` | `DOCTOR` | Datos para el Kanban: todas las citas del médico en una semana. |
-| `PATCH` | `/appointments/{id}/reschedule` | `DOCTOR` | Acción Drag&Drop del Kanban para mover una cita de horario. |
+| `GET` | `/doctors/me/profile` | `DOCTOR` | ver perfil profesional |
+| `PUT` | `/doctors/me/profile` | `DOCTOR` | editar perfil profesional |
+| `GET` | `/doctors/me/availability` | `DOCTOR` | ver agenda base semanal |
+| `PUT` | `/doctors/me/availability` | `DOCTOR` | definir horario semanal |
+| `POST` | `/doctors/me/blocks` | `DOCTOR` | bloquear día o rango puntual |
+| `DELETE` | `/doctors/me/blocks/{id}` | `DOCTOR` | levantar bloqueo |
+| `GET` | `/calendar/holidays` | `ADMIN`, `DOCTOR` | consultar feriados vigentes |
+| `POST` | `/calendar/holidays` | `ADMIN` | crear feriado o jornada parcial |
+| `GET` | `/appointments/slots` | `STUDENT` | consultar slots disponibles |
+| `POST` | `/appointments` | `STUDENT` | reservar cita |
+| `DELETE` | `/appointments/{id}` | `STUDENT` | cancelar cita propia |
+| `GET` | `/appointments/week` | `DOCTOR` | agenda semanal |
+| `PATCH` | `/appointments/{id}/reschedule` | `DOCTOR` | mover cita |
+| `PATCH` | `/appointments/{id}/status` | `DOCTOR` | cambiar estado operativo |
 
-### Ejemplos cURL (Postman / Frontend)
+### 4.2 EMR
 
-**1. Ver horarios disponibles (Slots)**
-```bash
-curl --location 'http://localhost:8080/api/v1/appointments/slots?doctorId=a0000000-0000-0000-0000-000000000002&date=2026-05-01' \
---header 'Authorization: Bearer AQUI_TU_ACCESS_TOKEN'
-```
-
-**2. Agendar Nueva Cita (Estudiante)**
-```bash
-curl --location 'http://localhost:8080/api/v1/appointments' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer AQUI_TU_ACCESS_TOKEN' \
---data '{
-    "doctorId": "a0000000-0000-0000-0000-000000000002",
-    "scheduledStart": "2026-05-01T10:00:00Z",
-    "type": "ROUTINE"
-}'
-```
-
-**3. Obtener Citas de la Semana (Kanban del Médico)**
-```bash
-curl --location 'http://localhost:8080/api/v1/appointments/week?startDate=2026-04-27' \
---header 'Authorization: Bearer AQUI_TU_ACCESS_TOKEN'
-```
-
----
-
-## 3. Módulo: EMR (Historia Clínica) - *[En Desarrollo]*
-
-| Método | Endpoint | Rol Requerido | Descripción |
+| Método | Endpoint | Rol | Objetivo |
 |---|---|---|---|
-| `GET` | `/emr/{patientId}` | `DOCTOR` | Obtiene el historial clínico cronológico completo del paciente. |
-| `POST` | `/emr/records` | `DOCTOR` | Guarda una nueva ficha clínica (cifra el texto y genera Hash Blockchain). |
-| `GET` | `/emr/snippets` | `DOCTOR` | Lista los atajos de teclado o macros (ej. `/gripe`) activos. |
-| `PUT` | `/emr/drafts/{id}` | `DOCTOR` | Autoguardado silencioso para evitar pérdida de datos. |
+| `GET` | `/emr/patients/{patientId}/timeline` | `DOCTOR` | historial cronológico |
+| `POST` | `/emr/records` | `DOCTOR` | crear ficha clínica inmutable |
+| `POST` | `/emr/corrections` | `DOCTOR` | anexar corrección |
+| `GET` | `/emr/snippets` | `DOCTOR` | listar snippets activos |
+| `PUT` | `/emr/drafts/{id}` | `DOCTOR` | autoguardado |
+| `POST` | `/prescriptions` | `DOCTOR` | emitir receta |
+| `GET` | `/prescriptions/active` | `STUDENT` | recetas activas propias |
 
-### Ejemplos cURL (Postman / Frontend)
+### 4.3 Laboratory
 
-**1. Obtener Historial del Paciente**
-```bash
-curl --location 'http://localhost:8080/api/v1/emr/a0000000-0000-0000-0000-000000000003' \
---header 'Authorization: Bearer AQUI_TU_ACCESS_TOKEN'
-```
-
-**2. Guardar Ficha Clínica (Inmutable)**
-```bash
-curl --location 'http://localhost:8080/api/v1/emr/records' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer AQUI_TU_ACCESS_TOKEN' \
---data '{
-    "patientId": "a0000000-0000-0000-0000-000000000003",
-    "appointmentId": "UUID_DE_LA_CITA",
-    "clinicalContent": "Paciente presenta cuadro febril de 3 días de evolución..."
-}'
-```
-
-**3. Consultar Snippets (Macros)**
-```bash
-curl --location 'http://localhost:8080/api/v1/emr/snippets' \
---header 'Authorization: Bearer AQUI_TU_ACCESS_TOKEN'
-```
-
----
-
-## 4. Módulo: Laboratorio (Órdenes y Archivos) - *[En Desarrollo]*
-
-| Método | Endpoint | Rol Requerido | Descripción |
+| Método | Endpoint | Rol | Objetivo |
 |---|---|---|---|
-| `POST` | `/lab/orders` | `DOCTOR` | El médico solicita pruebas de laboratorio al finalizar una consulta. |
-| `GET` | `/lab/orders` | `DOCTOR`, `LAB_TECH`| Lista las órdenes pendientes. Prioriza por nivel de urgencia (`ROUTINE` vs `URGENT`). |
-| `POST` | `/lab/orders/batch-approve` | `LAB_TECH` | Aprueba masivamente (Batch Approval) múltiples resultados normales simultáneamente. |
-| `POST` | `/lab/upload` | `LAB_TECH` | Endpoint para Dropzone (Sube PDF o DICOM a MinIO y actualiza la orden). |
-| `GET` | `/lab/results/{id}/pdf` | `DOCTOR`, `STUDENT`| Genera o devuelve el PDF final de los resultados con firma válida. |
+| `GET` | `/lab/catalog` | `ADMIN`, `DOCTOR` | consultar catálogo |
+| `POST` | `/lab/catalog` | `ADMIN` | alta de examen |
+| `POST` | `/lab/orders` | `DOCTOR` | crear orden |
+| `GET` | `/lab/orders` | `DOCTOR`, `LAB_TECH` | worklist filtrada |
+| `POST` | `/lab/orders/batch-approve` | `LAB_TECH` | aprobación por lotes |
+| `POST` | `/lab/upload` | `LAB_TECH` | subir archivo a MinIO |
+| `GET` | `/lab/results/{id}/pdf` | `DOCTOR`, `STUDENT` | descargar reporte |
 
-### Ejemplos cURL (Postman / Frontend)
+## 5. Regla de uso
 
-**1. Crear Orden de Laboratorio (Médico)**
-```bash
-curl --location 'http://localhost:8080/api/v1/lab/orders' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer AQUI_TU_ACCESS_TOKEN' \
---data '{
-    "patientId": "a0000000-0000-0000-0000-000000000003",
-    "priority": "ROUTINE",
-    "catalogItemIds": ["UUID_CATALOGO_1", "UUID_CATALOGO_2"],
-    "clinicalNotes": "Evaluar posible anemia."
-}'
-```
-
-**2. Aprobación por Lotes (Laboratorista)**
-```bash
-curl --location 'http://localhost:8080/api/v1/lab/orders/batch-approve' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer AQUI_TU_ACCESS_TOKEN' \
---data '{
-    "orderIds": ["UUID_ORDEN_1", "UUID_ORDEN_2", "UUID_ORDEN_3"]
-}'
-```
-
-**3. Subir PDF a la Orden (Dropzone)**
-```bash
-curl --location 'http://localhost:8080/api/v1/lab/upload' \
---header 'Authorization: Bearer AQUI_TU_ACCESS_TOKEN' \
---form 'orderItemId="UUID_DEL_ITEM"' \
---form 'file=@"/ruta/local/al/resultado.pdf"'
-```
-
----
-
-## 5. Otros (Recetas)
-
-| Método | Endpoint | Rol Requerido | Descripción |
-|---|---|---|---|
-| `GET` | `/prescriptions/active` | `STUDENT` | Lista de medicamentos recetados vigentes para el estudiante. |
-
-### Ejemplos cURL (Postman / Frontend)
-
-**1. Obtener Recetas Activas**
-```bash
-curl --location 'http://localhost:8080/api/v1/prescriptions/active' \
---header 'Authorization: Bearer AQUI_TU_ACCESS_TOKEN'
-```
+Si un endpoint no tiene controlador real en `src/main/java`, debe tratarse como `planned`.

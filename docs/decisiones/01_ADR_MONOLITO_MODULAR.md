@@ -5,7 +5,7 @@
 
 ## Contexto
 
-El sistema Ugram Health requiere gestionar múltiples dominios complejos: Identidad de estudiantes, Agendamiento de citas, Historia Clínica (EMR), y Laboratorio. La documentación original sugería evaluar Microservicios o un Monolito Modular.
+El sistema UAGRM Health requiere gestionar múltiples dominios complejos: Identidad de estudiantes, Agendamiento de citas, Historia Clínica (EMR), y Laboratorio. La documentación original sugería evaluar Microservicios o un Monolito Modular.
 
 ## Decisión
 
