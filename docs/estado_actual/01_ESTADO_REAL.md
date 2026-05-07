@@ -51,6 +51,10 @@ Endpoints reales:
 - `PUT /doctors/me/profile`
 - `GET /doctors/me/availability`
 - `PUT /doctors/me/availability`
+- `GET /doctors/me/schedule-settings`
+- `PUT /doctors/me/schedule-settings`
+- `GET /calendar/holidays`
+- `POST /calendar/holidays`
 
 Notas:
 
@@ -59,6 +63,8 @@ Notas:
 - `/profile` devuelve hoy perfil base; no completa todavía todo el DTO extendido
 - el perfil profesional del médico ya puede consultarse y editarse por endpoint dedicado
 - la disponibilidad semanal del médico ya puede consultarse y reemplazarse por endpoint dedicado
+- los parámetros de agenda del médico ya pueden consultarse y persistirse por endpoint dedicado
+- el calendario institucional ya permite consultar y registrar feriados totales o jornadas parciales
 
 ## 5. Lo adelantado en modelo pero no en API
 
@@ -70,12 +76,14 @@ Ya existen:
 - `AppointmentRepository`
 - consultas para conflictos, agenda semanal y próximas notificaciones
 - entidad `DoctorWeeklyAvailability`
+- entidad `DoctorScheduleSettings`
+- entidad `InstitutionalHoliday`
 - controlador y servicio para disponibilidad semanal del médico
+- controlador y servicio para parámetros operativos de agenda
+- controlador y servicio para calendario institucional
 
 Falta:
 
-- parámetros operativos de agenda
-- feriados
 - bloqueos del médico
 - motor de slots
 - slots y citas expuestos por API
@@ -126,10 +134,9 @@ Eso afecta:
 
 ## 7. Próximo orden lógico
 
-1. parámetros operativos de agenda
-2. feriados y bloqueos
-3. slots y citas
-4. EMR con control contextual
-5. laboratorio y archivos
-6. notificaciones
-7. blockchain real
+1. bloqueos del médico
+2. slots y citas
+3. EMR con control contextual
+4. laboratorio y archivos
+5. notificaciones
+6. blockchain real

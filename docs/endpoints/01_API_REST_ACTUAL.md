@@ -41,6 +41,10 @@ Todos los endpoints deben responder con el envelope:
 | `PUT` | `/doctors/me/profile` | implementado | `DOCTOR` | editar perfil profesional propio |
 | `GET` | `/doctors/me/availability` | implementado | `DOCTOR` | ver disponibilidad semanal propia |
 | `PUT` | `/doctors/me/availability` | implementado | `DOCTOR` | definir disponibilidad semanal propia |
+| `GET` | `/doctors/me/schedule-settings` | implementado | `DOCTOR` | ver parámetros de agenda propios |
+| `PUT` | `/doctors/me/schedule-settings` | implementado | `DOCTOR` | definir duración de consulta propia |
+| `GET` | `/calendar/holidays` | implementado | `ADMIN`, `DOCTOR` | consultar restricciones institucionales |
+| `POST` | `/calendar/holidays` | implementado | `ADMIN` | registrar feriado total o jornada parcial |
 
 ### 3.2 Curl listos para Postman
 
@@ -119,7 +123,47 @@ curl --location --request PUT 'http://localhost:8080/api/v1/doctors/me/availabil
 }'
 ```
 
-#### Flujo 7. Login de estudiante
+#### Flujo 7. Ver parámetros de agenda del médico
+
+```bash
+curl --location 'http://localhost:8080/api/v1/doctors/me/schedule-settings' \
+--header 'Authorization: Bearer TU_DOCTOR_ACCESS_TOKEN'
+```
+
+#### Flujo 8. Configurar parámetros de agenda del médico
+
+```bash
+curl --location --request PUT 'http://localhost:8080/api/v1/doctors/me/schedule-settings' \
+--header 'Authorization: Bearer TU_DOCTOR_ACCESS_TOKEN' \
+--header 'Content-Type: application/json' \
+--data '{
+  "appointmentDurationMinutes": 20
+}'
+```
+
+#### Flujo 9. Consultar calendario institucional
+
+```bash
+curl --location 'http://localhost:8080/api/v1/calendar/holidays' \
+--header 'Authorization: Bearer TU_DOCTOR_O_ADMIN_ACCESS_TOKEN'
+```
+
+#### Flujo 10. Registrar feriado o jornada parcial
+
+```bash
+curl --location 'http://localhost:8080/api/v1/calendar/holidays' \
+--header 'Authorization: Bearer TU_ADMIN_ACCESS_TOKEN' \
+--header 'Content-Type: application/json' \
+--data '{
+  "date": "2026-05-27",
+  "type": "PARTIAL",
+  "startTime": "08:00",
+  "endTime": "12:00",
+  "reason": "Jornada universitaria"
+}'
+```
+
+#### Flujo 11. Login de estudiante
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/login' \
@@ -130,7 +174,7 @@ curl --location 'http://localhost:8080/api/v1/auth/login' \
 }'
 ```
 
-#### Flujo 8. Refresh token
+#### Flujo 12. Refresh token
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/refresh' \
@@ -140,7 +184,7 @@ curl --location 'http://localhost:8080/api/v1/auth/refresh' \
 }'
 ```
 
-#### Flujo 9. Auto-registro de estudiante
+#### Flujo 13. Auto-registro de estudiante
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/register/patient' \
@@ -157,7 +201,7 @@ curl --location 'http://localhost:8080/api/v1/auth/register/patient' \
 }'
 ```
 
-#### Flujo 10. Login de admin
+#### Flujo 14. Login de admin
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/login' \
@@ -168,7 +212,7 @@ curl --location 'http://localhost:8080/api/v1/auth/login' \
 }'
 ```
 
-#### Flujo 11. Alta de staff por admin
+#### Flujo 15. Alta de staff por admin
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/admin/users/staff' \
@@ -197,17 +241,13 @@ Ordenado por flujo y dependencia real.
 Dependencias previas:
 
 - perfil médico editable
-- horarios de atención por médico
-- feriados institucionales
+- disponibilidad semanal por médico
+- parámetros operativos de agenda
 - bloqueos o excepciones del médico
 - motor de slots
 
 | Método | Endpoint | Rol | Objetivo |
 |---|---|---|---|
-| `GET` | `/doctors/me/schedule-settings` | `DOCTOR` | ver parámetros de agenda |
-| `PUT` | `/doctors/me/schedule-settings` | `DOCTOR` | definir duración de consulta y reglas operativas |
-| `GET` | `/calendar/holidays` | `ADMIN`, `DOCTOR` | consultar feriados vigentes |
-| `POST` | `/calendar/holidays` | `ADMIN` | crear feriado o jornada parcial |
 | `POST` | `/doctors/me/blocks` | `DOCTOR` | bloquear día o rango puntual |
 | `DELETE` | `/doctors/me/blocks/{id}` | `DOCTOR` | levantar bloqueo |
 | `GET` | `/appointments/slots` | `STUDENT` | consultar slots disponibles |
@@ -221,33 +261,7 @@ Dependencias previas:
 
 Estas llamadas sirven como contrato para preparar Postman. Hoy pueden responder `404` o `planned` hasta que cada endpoint exista.
 
-##### Paso 1. Configurar parámetros de agenda del médico
-
-```bash
-curl --location --request PUT 'http://localhost:8080/api/v1/doctors/me/schedule-settings' \
---header 'Authorization: Bearer TU_DOCTOR_ACCESS_TOKEN' \
---header 'Content-Type: application/json' \
---data '{
-  "appointmentDurationMinutes": 20
-}'
-```
-
-##### Paso 2. Registrar feriado o jornada parcial
-
-```bash
-curl --location 'http://localhost:8080/api/v1/calendar/holidays' \
---header 'Authorization: Bearer TU_ADMIN_ACCESS_TOKEN' \
---header 'Content-Type: application/json' \
---data '{
-  "date": "2026-05-27",
-  "type": "PARTIAL",
-  "startTime": "08:00",
-  "endTime": "12:00",
-  "reason": "Jornada universitaria"
-}'
-```
-
-##### Paso 3. Registrar bloqueo puntual del médico
+##### Paso 1. Registrar bloqueo puntual del médico
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/doctors/me/blocks' \
@@ -261,14 +275,14 @@ curl --location 'http://localhost:8080/api/v1/doctors/me/blocks' \
 }'
 ```
 
-##### Paso 4. Consultar slots disponibles
+##### Paso 2. Consultar slots disponibles
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/appointments/slots?doctorId=DOCTOR_ID&date=2026-05-30' \
 --header 'Authorization: Bearer TU_STUDENT_ACCESS_TOKEN'
 ```
 
-##### Paso 5. Reservar cita
+##### Paso 3. Reservar cita
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/appointments' \
@@ -280,21 +294,21 @@ curl --location 'http://localhost:8080/api/v1/appointments' \
 }'
 ```
 
-##### Paso 6. Cancelar cita propia
+##### Paso 4. Cancelar cita propia
 
 ```bash
 curl --location --request DELETE 'http://localhost:8080/api/v1/appointments/APPOINTMENT_ID' \
 --header 'Authorization: Bearer TU_STUDENT_ACCESS_TOKEN'
 ```
 
-##### Paso 7. Ver agenda semanal del médico
+##### Paso 5. Ver agenda semanal del médico
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/appointments/week?weekStart=2026-05-25' \
 --header 'Authorization: Bearer TU_DOCTOR_ACCESS_TOKEN'
 ```
 
-##### Paso 8. Reprogramar cita
+##### Paso 6. Reprogramar cita
 
 ```bash
 curl --location --request PATCH 'http://localhost:8080/api/v1/appointments/APPOINTMENT_ID/reschedule' \
@@ -305,7 +319,7 @@ curl --location --request PATCH 'http://localhost:8080/api/v1/appointments/APPOI
 }'
 ```
 
-##### Paso 9. Cambiar estado operativo de cita
+##### Paso 7. Cambiar estado operativo de cita
 
 ```bash
 curl --location --request PATCH 'http://localhost:8080/api/v1/appointments/APPOINTMENT_ID/status' \
