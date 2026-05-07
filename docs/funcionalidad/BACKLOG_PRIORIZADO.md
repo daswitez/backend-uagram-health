@@ -62,6 +62,18 @@ Reglas de priorización:
 2. Dado un valor fuera de rango permitido, cuando se intenta guardar, entonces el sistema rechaza el cambio.
 3. Dado una agenda ya configurada, cuando el médico actualiza la duración, entonces los slots futuros usan la nueva regla.
 
+### P3.1. US-S10 - Estado de preparación de agenda médica
+
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero saber si mi agenda está realmente lista para operar para no habilitar disponibilidad al paciente con configuración incompleta o ambigua.  
+**Dependencias:** `US-I01`, `US-S01`, `US-S02`.
+
+**Criterios de aceptación**
+
+1. Dado un médico autenticado, cuando consulta el estado de su agenda, entonces el sistema indica si perfil profesional, disponibilidad semanal y duración de consulta están completos.
+2. Dado una configuración incompleta o aún no confirmada explícitamente, cuando se evalúa la agenda, entonces el sistema la marca como no lista para publicar slots.
+3. Dado una agenda marcada como no lista, cuando el estudiante intenta consultar disponibilidad de ese médico, entonces el sistema no expone slots para ese contexto.
+
 ### P4. US-A01 - Calendario institucional de feriados y jornadas parciales
 
 **Actor:** `ADMIN`  
@@ -85,6 +97,18 @@ Reglas de priorización:
 1. Dado un médico autenticado, cuando registra un bloqueo puntual, entonces el rango afectado deja de ofrecerse como disponible.
 2. Dado un bloqueo que coincide con citas futuras, cuando se intenta guardar, entonces el sistema reporta el conflicto.
 3. Dado un bloqueo existente, cuando el médico lo elimina, entonces el rango vuelve a disponibilidad solo si no hay otra restricción activa.
+
+### P5.1. US-S11 - Resumen operativo y alertas de agenda del médico
+
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero ver un resumen consolidado de mi agenda y alertas operativas para entender rápidamente qué me falta configurar y qué restricciones impactan mi atención próxima.  
+**Dependencias:** `US-S10`, `US-A01`, `US-S03`.
+
+**Criterios de aceptación**
+
+1. Dado un médico autenticado, cuando consulta su resumen de agenda, entonces recibe el estado consolidado de perfil, disponibilidad, duración de consulta y agenda lista o no lista.
+2. Dado feriados institucionales o bloqueos próximos, cuando el médico consulta ese resumen, entonces ve alertas claras con fecha, tipo de restricción e impacto operativo básico.
+3. Dado una agenda incompleta, cuando el médico accede al resumen, entonces el sistema indica la siguiente acción requerida sin dejar estados vacíos o ambiguos.
 
 ### P6. US-S04 - Motor de generación de slots
 
@@ -157,6 +181,18 @@ Reglas de priorización:
 1. Dado una cita existente, cuando el médico la mueve a un slot válido, entonces la nueva hora queda confirmada.
 2. Dado un destino que cae en bloqueo, feriado o conflicto, cuando intenta reprogramar, entonces el sistema rechaza la acción.
 3. Dado un médico distinto al dueño de la cita, cuando intenta reprogramarla, entonces el sistema no le permite operar sobre ella.
+
+### P11.1. US-S12 - Reconfiguración segura de agenda con impacto futuro
+
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero conocer el impacto de cambiar mi disponibilidad o duración de consulta cuando ya existen slots o citas futuras para no romper la operación asistencial sin advertencia.  
+**Dependencias:** `US-S04`, `US-S06`, `US-S08`, `US-S09`.
+
+**Criterios de aceptación**
+
+1. Dado un médico con slots futuros o citas ya reservadas, cuando intenta cambiar disponibilidad base o duración de consulta, entonces el sistema evalúa y reporta el impacto antes de aplicar el cambio.
+2. Dado un cambio que invalida citas confirmadas o genera conflicto operativo, cuando el médico intenta confirmarlo, entonces el sistema lo rechaza o exige una resolución explícita según regla definida.
+3. Dado un cambio válido que solo afecta disponibilidad futura no reservada, cuando se aplica, entonces el sistema recalcula únicamente el horizonte futuro correspondiente sin alterar historial ni citas pasadas.
 
 ### P12. US-E01 - Regla de acceso clínico por contexto asistencial
 

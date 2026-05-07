@@ -20,7 +20,7 @@ Estado verificado del proyecto:
 - `identity` implementado y usable
 - `common` implementado
 - `storage` con servicio MinIO implementado
-- `scheduling` con perfil, disponibilidad semanal y parámetros de agenda del médico ya expuestos, pero sin slots/citas completas
+- `scheduling` con perfil, disponibilidad semanal, parámetros de agenda y readiness del médico ya expuestos, pero sin slots/citas completas
 - `emr` y `laboratory` con entidades/migraciones base, pero sin API completa
 - frontend ya integrado con rutas, roles y vistas por perfil
 
@@ -108,6 +108,7 @@ curl --location 'http://localhost:8080/api/v1/auth/login' \
 - `PUT /doctors/me/availability`
 - `GET /doctors/me/schedule-settings`
 - `PUT /doctors/me/schedule-settings`
+- `GET /doctors/me/schedule-readiness`
 - `GET /calendar/holidays`
 - `POST /calendar/holidays`
 
@@ -127,4 +128,4 @@ Los demás endpoints documentados deben tratarse como contrato objetivo hasta qu
 ./gradlew test
 ```
 
-Hoy ese comando pasa, pero todavía no hay suite real en `src/test`.
+Hoy ese comando pasa y ya existe una suite inicial de tests unitarios en `src/test`, todavía pequeña respecto al alcance del proyecto.

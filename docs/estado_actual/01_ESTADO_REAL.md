@@ -1,6 +1,6 @@
 # Estado Real del Backend
 
-Fecha de corte: **2026-05-06**
+Fecha de corte: **2026-05-07**
 
 ## 1. Resumen
 
@@ -10,7 +10,7 @@ Foto real:
 
 - backend compila
 - `./gradlew test` pasa
-- no existe `src/test`
+- ya existe una suite inicial de tests unitarios
 - el modelo de datos está más adelantado que la API
 - el frontend ya está integrado por rutas y roles
 
@@ -53,6 +53,7 @@ Endpoints reales:
 - `PUT /doctors/me/availability`
 - `GET /doctors/me/schedule-settings`
 - `PUT /doctors/me/schedule-settings`
+- `GET /doctors/me/schedule-readiness`
 - `GET /calendar/holidays`
 - `POST /calendar/holidays`
 
@@ -64,6 +65,7 @@ Notas:
 - el perfil profesional del médico ya puede consultarse y editarse por endpoint dedicado
 - la disponibilidad semanal del médico ya puede consultarse y reemplazarse por endpoint dedicado
 - los parámetros de agenda del médico ya pueden consultarse y persistirse por endpoint dedicado
+- el médico ya puede consultar si su agenda está lista para publicar slots según una regla explícita de readiness
 - el calendario institucional ya permite consultar y registrar feriados totales o jornadas parciales
 
 ## 5. Lo adelantado en modelo pero no en API
@@ -78,8 +80,10 @@ Ya existen:
 - entidad `DoctorWeeklyAvailability`
 - entidad `DoctorScheduleSettings`
 - entidad `InstitutionalHoliday`
+- regla de readiness de agenda médica
 - controlador y servicio para disponibilidad semanal del médico
 - controlador y servicio para parámetros operativos de agenda
+- controlador y servicio para readiness de agenda médica
 - controlador y servicio para calendario institucional
 
 Falta:

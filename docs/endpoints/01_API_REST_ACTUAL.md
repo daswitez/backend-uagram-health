@@ -43,6 +43,7 @@ Todos los endpoints deben responder con el envelope:
 | `PUT` | `/doctors/me/availability` | implementado | `DOCTOR` | definir disponibilidad semanal propia |
 | `GET` | `/doctors/me/schedule-settings` | implementado | `DOCTOR` | ver parámetros de agenda propios |
 | `PUT` | `/doctors/me/schedule-settings` | implementado | `DOCTOR` | definir duración de consulta propia |
+| `GET` | `/doctors/me/schedule-readiness` | implementado | `DOCTOR` | verificar si la agenda ya está lista para publicar slots |
 | `GET` | `/calendar/holidays` | implementado | `ADMIN`, `DOCTOR` | consultar restricciones institucionales |
 | `POST` | `/calendar/holidays` | implementado | `ADMIN` | registrar feriado total o jornada parcial |
 
@@ -141,14 +142,21 @@ curl --location --request PUT 'http://localhost:8080/api/v1/doctors/me/schedule-
 }'
 ```
 
-#### Flujo 9. Consultar calendario institucional
+#### Flujo 9. Ver estado de preparación de agenda
+
+```bash
+curl --location 'http://localhost:8080/api/v1/doctors/me/schedule-readiness' \
+--header 'Authorization: Bearer TU_DOCTOR_ACCESS_TOKEN'
+```
+
+#### Flujo 10. Consultar calendario institucional
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/calendar/holidays' \
 --header 'Authorization: Bearer TU_DOCTOR_O_ADMIN_ACCESS_TOKEN'
 ```
 
-#### Flujo 10. Registrar feriado o jornada parcial
+#### Flujo 11. Registrar feriado o jornada parcial
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/calendar/holidays' \
@@ -163,7 +171,7 @@ curl --location 'http://localhost:8080/api/v1/calendar/holidays' \
 }'
 ```
 
-#### Flujo 11. Login de estudiante
+#### Flujo 12. Login de estudiante
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/login' \
@@ -174,7 +182,7 @@ curl --location 'http://localhost:8080/api/v1/auth/login' \
 }'
 ```
 
-#### Flujo 12. Refresh token
+#### Flujo 13. Refresh token
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/refresh' \
@@ -184,7 +192,7 @@ curl --location 'http://localhost:8080/api/v1/auth/refresh' \
 }'
 ```
 
-#### Flujo 13. Auto-registro de estudiante
+#### Flujo 14. Auto-registro de estudiante
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/register/patient' \
@@ -201,7 +209,7 @@ curl --location 'http://localhost:8080/api/v1/auth/register/patient' \
 }'
 ```
 
-#### Flujo 14. Login de admin
+#### Flujo 15. Login de admin
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/login' \
@@ -212,7 +220,7 @@ curl --location 'http://localhost:8080/api/v1/auth/login' \
 }'
 ```
 
-#### Flujo 15. Alta de staff por admin
+#### Flujo 16. Alta de staff por admin
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/admin/users/staff' \
