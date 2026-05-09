@@ -1,6 +1,6 @@
 # Estado Real del Backend
 
-Fecha de corte: **2026-05-07**
+Fecha de corte: **2026-05-09**
 
 ## 1. Resumen
 
@@ -32,11 +32,17 @@ Esto es intencional en la documentación para no inducir cambios técnicos inseg
 |---|---|
 | `common` | implementado |
 | `identity` | implementado |
-| `storage` | parcial |
-| `scheduling` | parcial |
+| `storage` | servicio MinIO implementado, sin pipeline completo de dominio |
+| `scheduling` | parcial avanzado |
 | `emr` | scaffold |
 | `laboratory` | scaffold |
 | `notification` | planificado |
+
+Nota sobre backlog:
+
+- las historias documentadas son capacidades funcionales o transversales
+- en desarrollo ágil pueden dividirse en varias tareas Jira
+- el estado real debe validarse contra controladores, servicios, repositorios y migraciones
 
 ## 4. Lo implementado hoy
 
@@ -62,6 +68,7 @@ Endpoints reales:
 - `POST /calendar/holidays`
 - `PUT /calendar/holidays/{id}`
 - `DELETE /calendar/holidays/{id}`
+- `GET /appointments/slots`
 
 Notas:
 
@@ -74,6 +81,7 @@ Notas:
 - el médico ya puede consultar si su agenda está lista para publicar slots según una regla explícita de readiness
 - el médico ya puede listar, registrar, editar y eliminar bloqueos puntuales con validación contra citas futuras
 - el calendario institucional ya permite consultar, registrar, editar y eliminar feriados totales o jornadas parciales
+- el motor de slots ya calcula disponibilidad a partir de agenda semanal, duración de consulta, feriados, bloqueos y citas activas
 
 ## 5. Lo adelantado en modelo pero no en API
 
@@ -94,11 +102,12 @@ Ya existen:
 - controlador y servicio para readiness de agenda médica
 - controlador y servicio para bloqueos puntuales del médico
 - controlador y servicio para calendario institucional
+- motor de generación de slots on-demand
+- endpoint de consulta de slots disponibles
 
 Falta:
 
-- motor de slots
-- slots y citas expuestos por API
+- reserva, cancelación, agenda semanal y reprogramación de citas expuestas por API
 
 ### EMR
 
@@ -146,8 +155,9 @@ Eso afecta:
 
 ## 7. Próximo orden lógico
 
-1. slots y citas
-2. EMR con control contextual
-3. laboratorio y archivos
-4. notificaciones
-5. blockchain real
+1. reserva y cancelación de citas
+2. agenda semanal, estado operativo y reprogramación médica
+3. EMR con control contextual
+4. laboratorio y archivos
+5. notificaciones
+6. blockchain real

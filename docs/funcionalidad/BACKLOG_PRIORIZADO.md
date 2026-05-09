@@ -21,10 +21,56 @@ Reglas de priorización:
 - refresh token
 - registro de estudiantes
 - alta de staff por admin
-- entidades y migraciones de scheduling, EMR y laboratory
+- perfil médico, disponibilidad semanal, parámetros de agenda y readiness
+- calendario institucional, bloqueos médicos y motor de slots
+- entidades y migraciones base de scheduling, EMR y laboratory
 - servicio base de MinIO
 
-## 3. Backlog priorizado
+## 3. Cómo leer este backlog
+
+Este backlog es un mapa de capacidades priorizadas. No reemplaza Jira ni pretende ser una lista cerrada de tareas atómicas.
+
+Interpretación recomendada:
+
+- cada `US-*` describe una capacidad funcional o transversal
+- una capacidad puede dividirse en varias tareas técnicas, subtareas o historias más pequeñas
+- una misma tarea puede contribuir a más de una capacidad si respeta las reglas de seguridad y arquitectura
+- el estado real se verifica contra código, migraciones y endpoints existentes
+- cuando Jira desglose una capacidad, conservar la referencia a la historia madre
+
+Estados usados:
+
+- `implementado`: existe controlador o servicio operativo validable
+- `parcial`: existe parte del flujo, pero falta operación completa o contrato público
+- `scaffold`: existen entidades, migraciones o interfaces, pero no API funcional
+- `planificado`: no hay implementación relevante todavía
+
+## 4. Estado de avance por capacidad
+
+| Capacidad | Estado actual |
+|---|---|
+| `US-I01` perfil profesional médico | implementado |
+| `US-S01` disponibilidad semanal | implementado |
+| `US-S02` parámetros de agenda | implementado |
+| `US-S10` readiness de agenda | implementado |
+| `US-A01` calendario institucional | implementado |
+| `US-A02` consulta de calendario | implementado |
+| `US-A03` edición/eliminación de restricciones | implementado |
+| `US-S03` bloqueos médicos | implementado |
+| `US-S13` consulta de bloqueos | implementado |
+| `US-S14` edición de bloqueos | implementado |
+| `US-S04` motor de slots | implementado |
+| `US-S05` consulta de disponibilidad | parcial: disponible por médico y fecha |
+| `US-S06` reserva de cita | planificado |
+| `US-S07` cancelación de cita | planificado |
+| `US-S08` agenda semanal médica | planificado |
+| `US-S09` reprogramación | planificado |
+| EMR | scaffold |
+| Laboratory | scaffold |
+| Notifications | planificado |
+| Blockchain real | planificado |
+
+## 5. Backlog priorizado
 
 ### P1. US-I01 - Perfil profesional editable del médico
 
@@ -410,7 +456,7 @@ Reglas de priorización:
 2. Dado una verificación posterior, cuando se consulta el hash, entonces el sistema puede validar consistencia entre base de datos y blockchain.
 3. Dado una caída del servicio blockchain, cuando se produce, entonces la aplicación maneja el error según política definida sin perder trazabilidad.
 
-## 4. Orden sugerido por iteraciones
+## 6. Orden sugerido por iteraciones
 
 ### Iteración 1
 

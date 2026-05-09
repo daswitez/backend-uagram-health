@@ -20,7 +20,7 @@ Estado verificado del proyecto:
 - `identity` implementado y usable
 - `common` implementado
 - `storage` con servicio MinIO implementado
-- `scheduling` con perfil, disponibilidad semanal, parámetros de agenda, readiness y bloqueos del médico ya expuestos, pero sin slots/citas completas
+- `scheduling` con perfil, disponibilidad semanal, parámetros de agenda, readiness, bloqueos, calendario institucional y motor de slots ya expuestos, pero sin reserva/cancelación completa de citas
 - `emr` y `laboratory` con entidades/migraciones base, pero sin API completa
 - frontend ya integrado con rutas, roles y vistas por perfil
 
@@ -28,6 +28,19 @@ La seguridad y el diseño funcional deben seguir dos principios obligatorios:
 
 1. **Mínimo privilegio**
 2. **Need to know**
+
+## Cómo leer el backlog
+
+El backlog documentado funciona como mapa de capacidades del producto, no como una lista cerrada de tickets. En Jira, cada historia transversal puede dividirse en tareas técnicas, subtareas, bugs o historias más pequeñas según avance el sprint.
+
+Antes de implementar una historia, conviene contrastar:
+
+1. documentación vigente
+2. migraciones Flyway
+3. controladores y servicios reales
+4. estado de Jira
+
+La fuente final para saber si algo existe en backend sigue siendo el código en `src/main/java` y las migraciones en `src/main/resources/db/migration`.
 
 ## Requisitos
 
@@ -117,6 +130,7 @@ curl --location 'http://localhost:8080/api/v1/auth/login' \
 - `POST /calendar/holidays`
 - `PUT /calendar/holidays/{id}`
 - `DELETE /calendar/holidays/{id}`
+- `GET /appointments/slots`
 
 Los demás endpoints documentados deben tratarse como contrato objetivo hasta que exista controlador real.
 

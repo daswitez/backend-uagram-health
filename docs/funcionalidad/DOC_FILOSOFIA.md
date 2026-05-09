@@ -37,6 +37,18 @@ El sistema debe permitir seguir el recorrido:
 4. resultado
 5. consulta posterior
 
+### 2.4 Desarrollo ágil por capacidades
+
+El backlog describe capacidades de producto, no una lista rígida de tickets. Una historia puede representar una línea transversal completa y luego dividirse en tareas más pequeñas durante planificación o ejecución.
+
+Ejemplos:
+
+- agenda médica puede abrir tareas de perfil, disponibilidad, feriados, bloqueos, slots y citas
+- EMR contextual puede abrir tareas de relación asistencial, DTOs mínimos, auditoría, drafts y recetas
+- laboratorio puede abrir tareas de catálogo, orden, storage, aprobación y descarga
+
+La regla práctica es mantener trazabilidad: cada tarea nueva debe poder explicarse como parte de una capacidad mayor y debe conservar mínimo privilegio y need to know.
+
 ## 3. Principios UX
 
 - cero estados vacíos sin explicación
@@ -58,3 +70,4 @@ Cuando haya dudas sobre qué construir primero, se prioriza:
 1. lo que desbloquea flujo real de atención
 2. lo que reduce riesgo clínico u operativo
 3. lo que permite al frontend ya integrado trabajar con datos reales
+4. lo que deja contratos backend claros para que Jira, documentación y código avancen alineados

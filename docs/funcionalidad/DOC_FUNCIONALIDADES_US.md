@@ -4,6 +4,8 @@
 
 Este documento resume las capacidades objetivo de **UAGRM Health** por actor y dominio. No reemplaza al backlog priorizado; sirve para ver el producto completo.
 
+Las capacidades descritas aquí pueden convertirse en varias historias, subtareas o bugs durante el desarrollo ágil. El objetivo es mantener claridad funcional y trazabilidad, no congelar la estructura exacta de Jira.
+
 ## 2. Actores principales
 
 ### `STUDENT`

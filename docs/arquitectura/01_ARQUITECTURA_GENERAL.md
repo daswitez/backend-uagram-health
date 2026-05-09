@@ -46,10 +46,10 @@ bo.edu.uagrm.ugram.UgramHealthApplication
 |---|---|---|
 | `common` | configuración, seguridad, excepciones, DTOs comunes | implementado |
 | `identity` | autenticación, registro, perfiles base, staff admin | implementado |
-| `scheduling` | disponibilidad, citas, agenda médica | scaffold |
+| `scheduling` | disponibilidad, restricciones, slots y citas | parcial avanzado |
 | `emr` | historia clínica, snippets, recetas, inmutabilidad | scaffold |
 | `laboratory` | órdenes, resultados, lotes | scaffold |
-| `storage` | integración con MinIO | parcial |
+| `storage` | integración con MinIO | servicio base implementado |
 | `notification` | recordatorios y eventos push | planificado |
 
 ## 6. Reglas arquitectónicas
@@ -78,6 +78,17 @@ Principios obligatorios:
 
 Todos los endpoints deben responder con `ApiResponse<T>`.
 
+### 6.5 Backlog ágil
+
+Las historias funcionales documentadas son capacidades del producto. No deben leerse como una descomposición técnica completa.
+
+Reglas prácticas:
+
+- una capacidad transversal puede generar varias tareas Jira
+- una tarea puede tocar varios módulos si respeta las fronteras de dominio
+- el estado de una capacidad se verifica contra código y migraciones, no solo contra el título de la historia
+- cuando una tarea cambia el contrato HTTP, debe actualizar `docs/endpoints`
+
 ## 7. Relación con el frontend
 
 El frontend ya está segmentado por rol y rutas.
@@ -104,10 +115,9 @@ La navegación del frontend no reemplaza autorización backend.
 
 ## 9. Orden técnico de construcción
 
-1. perfil médico y disponibilidad
-2. feriados y bloqueos
-3. slots y citas
-4. EMR con control contextual
-5. laboratorio y archivos
-6. notificaciones
-7. blockchain real
+1. reserva, cancelación y operación básica de citas
+2. agenda semanal y reprogramación médica
+3. EMR con control contextual
+4. laboratorio y archivos
+5. notificaciones
+6. blockchain real

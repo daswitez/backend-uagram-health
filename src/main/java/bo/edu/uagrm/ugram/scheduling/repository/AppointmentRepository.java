@@ -69,5 +69,16 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
             @Param("end") LocalDateTime end,
             @Param("now") LocalDateTime now);
 
+    @Query("SELECT a FROM Appointment a " +
+           "WHERE a.doctor.id = :doctorId " +
+           "AND a.status NOT IN ('CANCELLED', 'NO_SHOW') " +
+           "AND a.scheduledStart < :end " +
+           "AND a.scheduledEnd > :start " +
+           "ORDER BY a.scheduledStart")
+    List<Appointment> findActiveByDoctorIdAndRange(
+            @Param("doctorId") UUID doctorId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end);
+
     Page<Appointment> findByPatientId(UUID patientId, Pageable pageable);
 }

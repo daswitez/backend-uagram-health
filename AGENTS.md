@@ -24,9 +24,14 @@ Implementado:
 - `ObjectStorageService`
 - migraciones Flyway
 
-Parcial o scaffold:
+Parcial avanzado:
 
 - `scheduling`
+
+En `scheduling` ya existen endpoints para perfil médico, disponibilidad semanal, parámetros de agenda, readiness, calendario institucional, bloqueos y consulta de slots. Todavía falta la operación completa de citas: reserva, cancelación, agenda semanal, cambio de estado y reprogramación.
+
+Scaffold o modelo base:
+
 - `emr`
 - `laboratory`
 
@@ -70,12 +75,23 @@ Orden recomendado:
 5. `src/main/resources/db/migration/`
 6. controladores/servicios reales en `src/main/java`
 
-## 6. Prioridad técnica sugerida
+## 6. Cómo leer el backlog
 
-1. perfil médico y disponibilidad
-2. feriados y bloqueos
-3. slots y citas
-4. EMR con control contextual
-5. laboratorio y storage
-6. notificaciones
-7. blockchain real
+El desarrollo se lleva de forma ágil. Las historias en `docs/funcionalidad/BACKLOG_PRIORIZADO.md` representan capacidades funcionales o transversales, no necesariamente tickets atómicos.
+
+Consecuencias:
+
+- una historia puede descomponerse en varias tareas técnicas, bugs, subtareas o historias Jira
+- una capacidad transversal como IAM, agenda, EMR contextual, storage o laboratorio puede tocar varios módulos
+- antes de implementar, verificar siempre si la historia ya está parcial o totalmente cubierta por código real
+- si se crea una tarea nueva, debe conservar trazabilidad hacia la capacidad o historia madre
+- actualizar documentación cuando cambie el estado real, no solo cuando cambie Jira
+
+## 7. Prioridad técnica sugerida
+
+1. reserva, cancelación y operación básica de citas
+2. agenda semanal y reprogramación médica
+3. EMR con control contextual
+4. laboratorio y storage operativo
+5. notificaciones
+6. blockchain real

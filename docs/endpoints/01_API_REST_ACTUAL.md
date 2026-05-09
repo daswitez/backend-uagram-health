@@ -7,6 +7,8 @@ Este documento separa explícitamente:
 - lo que **ya existe** en backend
 - lo que está **definido como contrato objetivo**
 
+Los contratos objetivo sirven para alinear backend, frontend y Jira. No implican que cada endpoint sea una única tarea: una capacidad puede dividirse en varias tareas ágiles antes de llegar al contrato público final.
+
 Base URL local:
 
 ```text
@@ -52,6 +54,7 @@ Todos los endpoints deben responder con el envelope:
 | `POST` | `/calendar/holidays` | implementado | `ADMIN` | registrar feriado total o jornada parcial |
 | `PUT` | `/calendar/holidays/{id}` | implementado | `ADMIN` | editar feriado o jornada parcial |
 | `DELETE` | `/calendar/holidays/{id}` | implementado | `ADMIN` | eliminar restricción institucional |
+| `GET` | `/appointments/slots` | implementado | `STUDENT`, `DOCTOR`, `ADMIN` | calcular slots disponibles por médico y fecha |
 
 ### 3.2 Curl listos para Postman
 
@@ -262,7 +265,44 @@ curl --location 'http://localhost:8080/api/v1/auth/login' \
 }'
 ```
 
-#### Flujo 20. Refresh token
+#### Flujo 20. Consultar slots disponibles
+
+```bash
+curl --location 'http://localhost:8080/api/v1/appointments/slots?doctorId=DOCTOR_ID&date=2026-05-25' \
+--header 'Authorization: Bearer TU_STUDENT_ACCESS_TOKEN'
+```
+
+Respuesta esperada:
+
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "doctorId": "DOCTOR_ID",
+    "date": "2026-05-25",
+    "appointmentDurationMinutes": 20,
+    "readyForPublishing": true,
+    "slots": [
+      {
+        "startAt": "2026-05-25T08:00:00",
+        "endAt": "2026-05-25T08:20:00"
+      }
+    ]
+  },
+  "timestamp": "2026-05-09T12:00:00Z"
+}
+```
+
+Reglas aplicadas por el motor:
+
+- si la agenda del médico no está lista para publicar, responde `slots: []`
+- excluye feriados totales y jornadas parciales
+- excluye bloqueos puntuales o de día completo del médico
+- excluye citas activas existentes
+- genera slots usando `appointmentDurationMinutes`
+
+#### Flujo 21. Refresh token
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/refresh' \
@@ -272,7 +312,7 @@ curl --location 'http://localhost:8080/api/v1/auth/refresh' \
 }'
 ```
 
-#### Flujo 21. Auto-registro de estudiante
+#### Flujo 22. Auto-registro de estudiante
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/register/patient' \
@@ -289,7 +329,7 @@ curl --location 'http://localhost:8080/api/v1/auth/register/patient' \
 }'
 ```
 
-#### Flujo 22. Login de admin
+#### Flujo 23. Login de admin
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/auth/login' \
@@ -300,7 +340,7 @@ curl --location 'http://localhost:8080/api/v1/auth/login' \
 }'
 ```
 
-#### Flujo 23. Alta de staff por admin
+#### Flujo 24. Alta de staff por admin
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/admin/users/staff' \
@@ -337,7 +377,6 @@ Dependencias previas:
 
 | Método | Endpoint | Rol | Objetivo |
 |---|---|---|---|
-| `GET` | `/appointments/slots` | `STUDENT` | consultar slots disponibles |
 | `POST` | `/appointments` | `STUDENT` | reservar cita |
 | `DELETE` | `/appointments/{id}` | `STUDENT` | cancelar cita propia |
 | `GET` | `/appointments/week` | `DOCTOR` | agenda semanal |
@@ -348,14 +387,7 @@ Dependencias previas:
 
 Estas llamadas sirven como contrato para preparar Postman. Hoy pueden responder `404` o `planned` hasta que cada endpoint exista.
 
-##### Paso 1. Consultar slots disponibles
-
-```bash
-curl --location 'http://localhost:8080/api/v1/appointments/slots?doctorId=DOCTOR_ID&date=2026-05-30' \
---header 'Authorization: Bearer TU_STUDENT_ACCESS_TOKEN'
-```
-
-##### Paso 2. Reservar cita
+##### Paso 1. Reservar cita
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/appointments' \
@@ -367,21 +399,21 @@ curl --location 'http://localhost:8080/api/v1/appointments' \
 }'
 ```
 
-##### Paso 3. Cancelar cita propia
+##### Paso 2. Cancelar cita propia
 
 ```bash
 curl --location --request DELETE 'http://localhost:8080/api/v1/appointments/APPOINTMENT_ID' \
 --header 'Authorization: Bearer TU_STUDENT_ACCESS_TOKEN'
 ```
 
-##### Paso 4. Ver agenda semanal del médico
+##### Paso 3. Ver agenda semanal del médico
 
 ```bash
 curl --location 'http://localhost:8080/api/v1/appointments/week?weekStart=2026-05-25' \
 --header 'Authorization: Bearer TU_DOCTOR_ACCESS_TOKEN'
 ```
 
-##### Paso 5. Reprogramar cita
+##### Paso 4. Reprogramar cita
 
 ```bash
 curl --location --request PATCH 'http://localhost:8080/api/v1/appointments/APPOINTMENT_ID/reschedule' \
@@ -392,7 +424,7 @@ curl --location --request PATCH 'http://localhost:8080/api/v1/appointments/APPOI
 }'
 ```
 
-##### Paso 6. Cambiar estado operativo de cita
+##### Paso 5. Cambiar estado operativo de cita
 
 ```bash
 curl --location --request PATCH 'http://localhost:8080/api/v1/appointments/APPOINTMENT_ID/status' \
@@ -430,3 +462,5 @@ curl --location --request PATCH 'http://localhost:8080/api/v1/appointments/APPOI
 ## 5. Regla de uso
 
 Si un endpoint no tiene controlador real en `src/main/java`, debe tratarse como `planned`.
+
+Cuando una historia transversal se divida en tareas Jira, este documento debe actualizarse solo cuando cambie el contrato HTTP esperado o cuando un endpoint pase de `planned` a implementado.

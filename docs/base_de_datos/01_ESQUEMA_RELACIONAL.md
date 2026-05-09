@@ -11,6 +11,10 @@ Utilizamos Flyway para gestionar los esquemas. Las migraciones están en `src/ma
 *   **V3__create_clinical_records.sql**: Tablas del EMR (`clinical_records`, `correction_notes`, `prescriptions`, `snippets`).
 *   **V4__create_lab_tables.sql**: Tablas del laboratorio (`lab_catalogs`, `lab_orders`, `lab_order_items`).
 *   **V5__seed_initial_data.sql**: Datos de prueba (Admin, Doctores, Estudiantes, Laboratoristas, Catálogo de Lab, Snippets básicos).
+*   **V6__create_doctor_weekly_availability.sql**: Disponibilidad semanal base del médico.
+*   **V7__create_doctor_schedule_settings.sql**: Parámetros de agenda por médico, incluida duración de consulta.
+*   **V8__create_institutional_holidays.sql**: Feriados institucionales totales y jornadas parciales.
+*   **V9__create_doctor_availability_blocks.sql**: Bloqueos puntuales o de día completo por médico.
 
 ## 2. Diagrama Entidad-Relación (ER)
 
@@ -21,6 +25,10 @@ erDiagram
     
     users ||--o{ appointments : "is patient"
     users ||--o{ appointments : "is doctor"
+
+    users ||--o{ doctor_weekly_availability : "defines weekly availability"
+    users ||--o| doctor_schedule_settings : "defines schedule settings"
+    users ||--o{ doctor_availability_blocks : "has blocks"
     
     appointments ||--o{ clinical_records : "has"
     users ||--o{ clinical_records : "is patient"
@@ -40,3 +48,4 @@ erDiagram
 *   **UUIDs como Primary Keys:** En lugar de enteros autoincrementales, todas las tablas usan `UUID` (`gen_random_uuid()`). Esto previene ataques de enumeración (IDOR) donde un atacante adivina el ID del siguiente registro.
 *   **Inmutabilidad del EMR:** La tabla `clinical_records` no tiene columna `updated_at`. Por diseño de sistema, un registro médico no se edita en la tabla principal; cualquier corrección se inserta en la tabla de solo adición `correction_notes`.
 *   **Extensiones de Postgres:** El script de inicialización de Docker activa `uuid-ossp` y `pgcrypto`.
+*   **Agenda calculada:** Los slots no se persisten como tabla propia. Se calculan on-demand desde disponibilidad semanal, duración de consulta, feriados, bloqueos y citas activas.
