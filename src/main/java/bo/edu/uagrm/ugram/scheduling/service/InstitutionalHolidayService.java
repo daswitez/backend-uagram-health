@@ -1,6 +1,7 @@
 package bo.edu.uagrm.ugram.scheduling.service;
 
 import bo.edu.uagrm.ugram.common.exception.BusinessException;
+import bo.edu.uagrm.ugram.common.exception.ResourceNotFoundException;
 import bo.edu.uagrm.ugram.scheduling.dto.InstitutionalHolidayRequest;
 import bo.edu.uagrm.ugram.scheduling.dto.InstitutionalHolidayResponse;
 import bo.edu.uagrm.ugram.scheduling.entity.InstitutionalHoliday;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -60,6 +62,30 @@ public class InstitutionalHolidayService {
         return mapResponse(saved);
     }
 
+    @Transactional
+    public InstitutionalHolidayResponse updateHoliday(UUID holidayId, InstitutionalHolidayRequest request) {
+        InstitutionalHoliday holiday = institutionalHolidayRepository.findById(holidayId)
+                .orElseThrow(() -> new ResourceNotFoundException("InstitutionalHoliday", "id", holidayId));
+
+        validateRequest(request);
+        validateConflicts(request, holidayId);
+
+        holiday.setDate(request.getDate());
+        holiday.setType(request.getType());
+        holiday.setStartTime(request.getStartTime());
+        holiday.setEndTime(request.getEndTime());
+        holiday.setReason(request.getReason().trim());
+
+        return mapResponse(institutionalHolidayRepository.save(holiday));
+    }
+
+    @Transactional
+    public void deleteHoliday(UUID holidayId) {
+        InstitutionalHoliday holiday = institutionalHolidayRepository.findById(holidayId)
+                .orElseThrow(() -> new ResourceNotFoundException("InstitutionalHoliday", "id", holidayId));
+        institutionalHolidayRepository.delete(holiday);
+    }
+
     private void validateRequest(InstitutionalHolidayRequest request) {
         if (request.getType() == InstitutionalHolidayType.TOTAL) {
             if (request.getStartTime() != null || request.getEndTime() != null) {
@@ -78,7 +104,13 @@ public class InstitutionalHolidayService {
     }
 
     private void validateConflicts(InstitutionalHolidayRequest request) {
-        List<InstitutionalHoliday> sameDateHolidays = institutionalHolidayRepository.findByDate(request.getDate());
+        validateConflicts(request, null);
+    }
+
+    private void validateConflicts(InstitutionalHolidayRequest request, UUID currentHolidayId) {
+        List<InstitutionalHoliday> sameDateHolidays = institutionalHolidayRepository.findByDate(request.getDate()).stream()
+                .filter(holiday -> currentHolidayId == null || !holiday.getId().equals(currentHolidayId))
+                .toList();
 
         if (request.getType() == InstitutionalHolidayType.TOTAL && !sameDateHolidays.isEmpty()) {
             throw new BusinessException("Ya existe una restricción institucional registrada para esa fecha");

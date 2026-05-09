@@ -54,8 +54,14 @@ Endpoints reales:
 - `GET /doctors/me/schedule-settings`
 - `PUT /doctors/me/schedule-settings`
 - `GET /doctors/me/schedule-readiness`
+- `GET /doctors/me/blocks`
+- `POST /doctors/me/blocks`
+- `PUT /doctors/me/blocks/{id}`
+- `DELETE /doctors/me/blocks/{id}`
 - `GET /calendar/holidays`
 - `POST /calendar/holidays`
+- `PUT /calendar/holidays/{id}`
+- `DELETE /calendar/holidays/{id}`
 
 Notas:
 
@@ -66,7 +72,8 @@ Notas:
 - la disponibilidad semanal del médico ya puede consultarse y reemplazarse por endpoint dedicado
 - los parámetros de agenda del médico ya pueden consultarse y persistirse por endpoint dedicado
 - el médico ya puede consultar si su agenda está lista para publicar slots según una regla explícita de readiness
-- el calendario institucional ya permite consultar y registrar feriados totales o jornadas parciales
+- el médico ya puede listar, registrar, editar y eliminar bloqueos puntuales con validación contra citas futuras
+- el calendario institucional ya permite consultar, registrar, editar y eliminar feriados totales o jornadas parciales
 
 ## 5. Lo adelantado en modelo pero no en API
 
@@ -79,16 +86,17 @@ Ya existen:
 - consultas para conflictos, agenda semanal y próximas notificaciones
 - entidad `DoctorWeeklyAvailability`
 - entidad `DoctorScheduleSettings`
+- entidad `DoctorAvailabilityBlock`
 - entidad `InstitutionalHoliday`
 - regla de readiness de agenda médica
 - controlador y servicio para disponibilidad semanal del médico
 - controlador y servicio para parámetros operativos de agenda
 - controlador y servicio para readiness de agenda médica
+- controlador y servicio para bloqueos puntuales del médico
 - controlador y servicio para calendario institucional
 
 Falta:
 
-- bloqueos del médico
 - motor de slots
 - slots y citas expuestos por API
 
@@ -138,9 +146,8 @@ Eso afecta:
 
 ## 7. Próximo orden lógico
 
-1. bloqueos del médico
-2. slots y citas
-3. EMR con control contextual
-4. laboratorio y archivos
-5. notificaciones
-6. blockchain real
+1. slots y citas
+2. EMR con control contextual
+3. laboratorio y archivos
+4. notificaciones
+5. blockchain real

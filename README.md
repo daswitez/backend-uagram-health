@@ -20,7 +20,7 @@ Estado verificado del proyecto:
 - `identity` implementado y usable
 - `common` implementado
 - `storage` con servicio MinIO implementado
-- `scheduling` con perfil, disponibilidad semanal, parámetros de agenda y readiness del médico ya expuestos, pero sin slots/citas completas
+- `scheduling` con perfil, disponibilidad semanal, parámetros de agenda, readiness y bloqueos del médico ya expuestos, pero sin slots/citas completas
 - `emr` y `laboratory` con entidades/migraciones base, pero sin API completa
 - frontend ya integrado con rutas, roles y vistas por perfil
 
@@ -109,8 +109,14 @@ curl --location 'http://localhost:8080/api/v1/auth/login' \
 - `GET /doctors/me/schedule-settings`
 - `PUT /doctors/me/schedule-settings`
 - `GET /doctors/me/schedule-readiness`
+- `GET /doctors/me/blocks`
+- `POST /doctors/me/blocks`
+- `PUT /doctors/me/blocks/{id}`
+- `DELETE /doctors/me/blocks/{id}`
 - `GET /calendar/holidays`
 - `POST /calendar/holidays`
+- `PUT /calendar/holidays/{id}`
+- `DELETE /calendar/holidays/{id}`
 
 Los demás endpoints documentados deben tratarse como contrato objetivo hasta que exista controlador real.
 

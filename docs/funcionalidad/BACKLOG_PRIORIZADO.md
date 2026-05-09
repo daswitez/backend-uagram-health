@@ -86,6 +86,30 @@ Reglas de priorización:
 2. Dado un administrador autenticado, cuando crea una jornada parcial, entonces solo quedan disponibles las horas no bloqueadas.
 3. Dado un usuario sin rol `ADMIN`, cuando intenta modificar feriados, entonces el sistema responde `403`.
 
+### P4.1. US-A02 - Consulta operativa del calendario institucional
+
+**Actor:** `ADMIN`, `DOCTOR`  
+**Descripción:** Como administrador o médico, quiero visualizar las restricciones institucionales vigentes para entender qué días y franjas ya están afectadas antes de operar sobre agenda y disponibilidad.  
+**Dependencias:** `US-A01`.
+
+**Criterios de aceptación**
+
+1. Dado un usuario autorizado, cuando consulta el calendario institucional, entonces recibe feriados totales y jornadas parciales con fecha, rango y motivo.
+2. Dado un rango de fechas, cuando se consulta el calendario, entonces el sistema devuelve solo las restricciones comprendidas en ese período.
+3. Dado un usuario sin rol `ADMIN` ni `DOCTOR`, cuando intenta consultar el calendario institucional, entonces el sistema responde `403`.
+
+### P4.2. US-A03 - Edición y eliminación de restricciones institucionales
+
+**Actor:** `ADMIN`  
+**Descripción:** Como administrador, quiero editar o eliminar feriados y jornadas parciales para corregir cambios operativos sin dejar restricciones institucionales obsoletas.  
+**Dependencias:** `US-A01`, `US-A02`.
+
+**Criterios de aceptación**
+
+1. Dado un administrador autenticado, cuando actualiza una restricción institucional existente, entonces el sistema valida solapamientos y persiste la nueva configuración.
+2. Dado una restricción institucional existente, cuando el administrador la elimina, entonces deja de afectar la disponibilidad futura.
+3. Dado un usuario sin rol `ADMIN`, cuando intenta editar o eliminar restricciones institucionales, entonces el sistema responde `403`.
+
 ### P5. US-S03 - Bloqueos y excepciones puntuales del médico
 
 **Actor:** `DOCTOR`  
@@ -98,11 +122,35 @@ Reglas de priorización:
 2. Dado un bloqueo que coincide con citas futuras, cuando se intenta guardar, entonces el sistema reporta el conflicto.
 3. Dado un bloqueo existente, cuando el médico lo elimina, entonces el rango vuelve a disponibilidad solo si no hay otra restricción activa.
 
+### P5.2. US-S13 - Consulta de bloqueos puntuales del médico
+
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero visualizar mis bloqueos registrados para revisar mis excepciones activas y poder operarlas sin ambigüedad.  
+**Dependencias:** `US-S03`.
+
+**Criterios de aceptación**
+
+1. Dado un médico autenticado, cuando consulta sus bloqueos, entonces recibe sus días completos y rangos horarios con fecha, motivo e identificador operativo.
+2. Dado un rango de fechas, cuando el médico filtra sus bloqueos, entonces el sistema devuelve solo las excepciones comprendidas en ese período.
+3. Dado un médico, cuando intenta consultar bloqueos de otro profesional, entonces el sistema no expone ese contexto.
+
+### P5.3. US-S14 - Edición de bloqueos puntuales del médico
+
+**Actor:** `DOCTOR`  
+**Descripción:** Como médico, quiero editar un bloqueo existente para ajustar ausencias o contingencias sin tener que recrear manualmente toda la excepción.  
+**Dependencias:** `US-S03`, `US-S13`.
+
+**Criterios de aceptación**
+
+1. Dado un bloqueo existente del médico, cuando actualiza fecha, rango o motivo, entonces el sistema valida solapamientos y persiste el cambio.
+2. Dado una edición que coincide con citas futuras o con otro bloqueo activo, cuando se intenta guardar, entonces el sistema reporta el conflicto.
+3. Dado un bloqueo perteneciente a otro profesional, cuando se intenta editar, entonces el sistema rechaza la operación.
+
 ### P5.1. US-S11 - Resumen operativo y alertas de agenda del médico
 
 **Actor:** `DOCTOR`  
 **Descripción:** Como médico, quiero ver un resumen consolidado de mi agenda y alertas operativas para entender rápidamente qué me falta configurar y qué restricciones impactan mi atención próxima.  
-**Dependencias:** `US-S10`, `US-A01`, `US-S03`.
+**Dependencias:** `US-S10`, `US-A02`, `US-S13`.
 
 **Criterios de aceptación**
 

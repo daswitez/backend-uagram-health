@@ -9,15 +9,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/calendar/holidays")
@@ -41,5 +45,21 @@ public class InstitutionalHolidayController {
             @Valid @RequestBody InstitutionalHolidayRequest request) {
         InstitutionalHolidayResponse response = institutionalHolidayService.createHoliday(request);
         return ResponseEntity.ok(ApiResponse.ok("Restricción institucional registrada", response));
+    }
+
+    @PutMapping("/{holidayId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<InstitutionalHolidayResponse>> updateHoliday(
+            @PathVariable UUID holidayId,
+            @Valid @RequestBody InstitutionalHolidayRequest request) {
+        InstitutionalHolidayResponse response = institutionalHolidayService.updateHoliday(holidayId, request);
+        return ResponseEntity.ok(ApiResponse.ok("Restricción institucional actualizada", response));
+    }
+
+    @DeleteMapping("/{holidayId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> deleteHoliday(@PathVariable UUID holidayId) {
+        institutionalHolidayService.deleteHoliday(holidayId);
+        return ResponseEntity.ok(ApiResponse.ok("Restricción institucional eliminada", null));
     }
 }
