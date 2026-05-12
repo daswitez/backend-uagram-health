@@ -157,6 +157,7 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(accessExpirationMs / 1000)
+                .userType(user.getUserType().name())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .specialty(resolveSpecialty(user))

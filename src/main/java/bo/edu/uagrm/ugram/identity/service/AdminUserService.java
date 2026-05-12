@@ -1,6 +1,9 @@
 package bo.edu.uagrm.ugram.identity.service;
 
 import bo.edu.uagrm.ugram.common.exception.BusinessException;
+import bo.edu.uagrm.ugram.common.exception.ResourceNotFoundException;
+import bo.edu.uagrm.ugram.identity.dto.StaffAccountResponse;
+import bo.edu.uagrm.ugram.identity.dto.StaffAccountUpdateRequest;
 import bo.edu.uagrm.ugram.identity.dto.StaffRegisterRequest;
 import bo.edu.uagrm.ugram.identity.entity.Doctor;
 import bo.edu.uagrm.ugram.identity.entity.User;
@@ -20,11 +23,19 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AdminUserService {
+
+    private static final List<UserType> STAFF_USER_TYPES = List.of(
+            UserType.ADMIN,
+            UserType.DOCTOR,
+            UserType.LAB_TECH,
+            UserType.RECEPTIONIST
+    );
 
     private final UserRepository userRepository;
     private final DoctorRepository doctorRepository;
@@ -107,6 +118,49 @@ public class AdminUserService {
         return result;
     }
 
+    @Transactional(readOnly = true)
+    public List<StaffAccountResponse> getAllStaffAccounts() {
+        return userRepository.findByUserTypeInOrderByCreatedAtDesc(STAFF_USER_TYPES).stream()
+                .map(this::mapStaffResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public StaffAccountResponse getStaffAccount(UUID userId) {
+        User user = findStaffUserById(userId);
+        return mapStaffResponse(user);
+    }
+
+    @Transactional
+    public StaffAccountResponse updateStaffAccount(UUID userId, StaffAccountUpdateRequest request) {
+        User user = findStaffUserById(userId);
+
+        String normalizedEmail = request.getEmail().trim();
+        String normalizedCi = request.getCi().trim();
+
+        if (userRepository.existsByEmailAndIdNot(normalizedEmail, userId)) {
+            throw new BusinessException("El correo electrónico ya está registrado");
+        }
+        if (userRepository.existsByCiAndIdNot(normalizedCi, userId)) {
+            throw new BusinessException("El Carnet de Identidad (C.I.) ya está registrado");
+        }
+
+        user.setEmail(normalizedEmail);
+        user.setCi(normalizedCi);
+        user.setFirstName(request.getFirstName().trim());
+        user.setLastName(request.getLastName().trim());
+        user.setPhone(normalizePhone(request.getPhone()));
+        user.setIsActive(request.getActive());
+
+        user = userRepository.save(user);
+
+        if (user.getUserType() == UserType.DOCTOR) {
+            updateDoctorProfessionalFields(user, request);
+        }
+
+        return mapStaffResponse(user);
+    }
+
     /**
      * Generates a cryptographically secure temporary password that always satisfies
      * the platform's password policy: ^(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$
@@ -146,5 +200,62 @@ public class AdminUserService {
         StringBuilder sb = new StringBuilder(12);
         for (char c : chars) sb.append(c);
         return sb.toString();
+    }
+
+    private User findStaffUserById(UUID userId) {
+        return userRepository.findByIdAndUserTypeIn(userId, STAFF_USER_TYPES)
+                .orElseThrow(() -> new ResourceNotFoundException("StaffUser", "id", userId));
+    }
+
+    private void updateDoctorProfessionalFields(User user, StaffAccountUpdateRequest request) {
+        String specialty = normalizeRequiredDoctorField(request.getSpecialty(), "La Especialidad es requerida para cuentas DOCTOR");
+        String medicalLicense = normalizeRequiredDoctorField(request.getMedicalLicense(), "La Matrícula Profesional es requerida para cuentas DOCTOR");
+
+        if (doctorRepository.existsByMedicalLicenseAndUserIdNot(medicalLicense, user.getId())) {
+            throw new BusinessException("La Matrícula Profesional ya está registrada");
+        }
+
+        Doctor doctor = doctorRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor", "userId", user.getId()));
+        doctor.setSpecialty(specialty);
+        doctor.setMedicalLicense(medicalLicense);
+        doctorRepository.save(doctor);
+    }
+
+    private StaffAccountResponse mapStaffResponse(User user) {
+        Doctor doctor = user.getUserType() == UserType.DOCTOR
+                ? doctorRepository.findByUserId(user.getId()).orElse(null)
+                : null;
+
+        return StaffAccountResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .ci(user.getCi())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .fullName(user.getFullName())
+                .phone(user.getPhone())
+                .userType(user.getUserType().name())
+                .active(Boolean.TRUE.equals(user.getIsActive()))
+                .specialty(doctor != null ? doctor.getSpecialty() : null)
+                .medicalLicense(doctor != null ? doctor.getMedicalLicense() : null)
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
+    }
+
+    private String normalizePhone(String phone) {
+        if (phone == null) {
+            return null;
+        }
+        String normalized = phone.trim();
+        return normalized.isEmpty() ? null : normalized;
+    }
+
+    private String normalizeRequiredDoctorField(String value, String message) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new BusinessException(message);
+        }
+        return value.trim();
     }
 }

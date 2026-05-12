@@ -1,21 +1,28 @@
 package bo.edu.uagrm.ugram.identity.controller;
 
 import bo.edu.uagrm.ugram.common.dto.ApiResponse;
+import bo.edu.uagrm.ugram.identity.dto.StaffAccountResponse;
+import bo.edu.uagrm.ugram.identity.dto.StaffAccountUpdateRequest;
 import bo.edu.uagrm.ugram.identity.dto.StaffRegisterRequest;
 import bo.edu.uagrm.ugram.identity.service.AdminUserService;
 import bo.edu.uagrm.ugram.common.service.EmailService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/admin/users")
@@ -75,5 +82,27 @@ public class AdminUserController {
                 : "Personal registrado con éxito. ⚠️ El correo no pudo enviarse — comparta las credenciales manualmente.";
 
         return ResponseEntity.ok(ApiResponse.ok(message, responseData));
+    }
+
+    @GetMapping("/staff")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<StaffAccountResponse>>> getAllStaffAccounts() {
+        return ResponseEntity.ok(ApiResponse.ok(adminUserService.getAllStaffAccounts()));
+    }
+
+    @GetMapping("/staff/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<StaffAccountResponse>> getStaffAccount(
+            @PathVariable UUID userId) {
+        return ResponseEntity.ok(ApiResponse.ok(adminUserService.getStaffAccount(userId)));
+    }
+
+    @PutMapping("/staff/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<StaffAccountResponse>> updateStaffAccount(
+            @PathVariable UUID userId,
+            @Valid @RequestBody StaffAccountUpdateRequest request) {
+        StaffAccountResponse response = adminUserService.updateStaffAccount(userId, request);
+        return ResponseEntity.ok(ApiResponse.ok("Cuenta de personal actualizada", response));
     }
 }
