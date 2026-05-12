@@ -4,9 +4,11 @@ import bo.edu.uagrm.ugram.common.exception.BusinessException;
 import bo.edu.uagrm.ugram.common.exception.ResourceNotFoundException;
 import bo.edu.uagrm.ugram.common.security.JwtProvider;
 import bo.edu.uagrm.ugram.identity.dto.*;
+import bo.edu.uagrm.ugram.identity.entity.Doctor;
 import bo.edu.uagrm.ugram.identity.entity.User;
 import bo.edu.uagrm.ugram.identity.entity.UserType;
 import bo.edu.uagrm.ugram.identity.entity.Patient;
+import bo.edu.uagrm.ugram.identity.repository.DoctorRepository;
 import bo.edu.uagrm.ugram.identity.repository.UserRepository;
 import bo.edu.uagrm.ugram.identity.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
+    private final DoctorRepository doctorRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
 
@@ -94,13 +97,7 @@ public class AuthService {
 
         log.info("User {} ({}) logged in successfully", user.getEmail(), user.getUserType());
 
-        return LoginResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .expiresIn(accessExpirationMs / 1000)
-                .user(mapToProfile(user))
-                .build();
+        return buildLoginResponse(user, accessToken, refreshToken);
     }
 
     /**
@@ -127,13 +124,7 @@ public class AuthService {
         String newRefreshToken = jwtProvider.generateRefreshToken(
                 user.getId(), user.getEmail(), user.getUserType().name());
 
-        return LoginResponse.builder()
-                .accessToken(newAccessToken)
-                .refreshToken(newRefreshToken)
-                .tokenType("Bearer")
-                .expiresIn(accessExpirationMs / 1000)
-                .user(mapToProfile(user))
-                .build();
+        return buildLoginResponse(user, newAccessToken, newRefreshToken);
     }
 
     /**
@@ -158,5 +149,28 @@ public class AuthService {
                 .userType(user.getUserType().name())
                 .active(user.getIsActive())
                 .build();
+    }
+
+    private LoginResponse buildLoginResponse(User user, String accessToken, String refreshToken) {
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(accessExpirationMs / 1000)
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .specialty(resolveSpecialty(user))
+                .user(mapToProfile(user))
+                .build();
+    }
+
+    private String resolveSpecialty(User user) {
+        if (user.getUserType() != UserType.DOCTOR) {
+            return null;
+        }
+
+        return doctorRepository.findByUserId(user.getId())
+                .map(Doctor::getSpecialty)
+                .orElse(null);
     }
 }
