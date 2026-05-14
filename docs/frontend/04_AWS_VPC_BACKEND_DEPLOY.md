@@ -231,7 +231,7 @@ JWT_SECRET=CAMBIA_ESTE_SECRETO_CON_UNO_LARGO_Y_REAL
 MAIL_USERNAME=TU_CORREO_SMTP
 MAIL_PASSWORD=TU_PASSWORD_O_APP_PASSWORD
 
-CORS_ALLOWED_ORIGINS=https://ugram-health-a5uu6r69i-daswitezs-projects.vercel.app,https://ugram-health-web.vercel.app
+CORS_ALLOWED_ORIGINS=https://ugram-health-a5uu6r69i-daswitezs-projects.vercel.app,https://ugram-health-web.vercel.app,https://ugram-health-web-git-produccion-daswitezs-projects.vercel.app
 ```
 
 Notas:
@@ -351,6 +351,7 @@ Con `CORS_ALLOWED_ORIGINS` configurado, el backend debe aceptar:
 
 - `https://ugram-health-a5uu6r69i-daswitezs-projects.vercel.app`
 - `https://ugram-health-web.vercel.app`
+- `https://ugram-health-web-git-produccion-daswitezs-projects.vercel.app`
 
 Puedes probar un preflight desde la instancia o desde tu máquina:
 
